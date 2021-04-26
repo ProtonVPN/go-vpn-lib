@@ -1,0 +1,39 @@
+{
+    "go_version":"1.16.3",
+    "build_dir":"build",
+    "out_dir":"out",
+    "go_mobile_dir":"mobile",
+    "go_mobile_flags": [
+        "-x",
+        "-ldflags=\"-s -w\""
+    ],
+    "build_name":"WireguardSRP",
+    "build_tag": "2.1.5",
+    "java_pkg":"com.proton.Crypto",
+    "targets":["apple"],
+    "requirements": [
+        {
+            "module":
+            {
+                "path":"github.com/ProtonMail/go-srp",
+                "version":"9a6ea49e04396c6ba09d12a23d0c260dab6f5073"
+            }
+        },
+        {
+            "module": {
+                "path":"gitlab.protontech.ch/ProtonVPN/clients-shared",
+                "version": "v0.0.0"
+            },
+            "packages": ["ed25519", "localAgent"]
+        }
+    ],
+    "replacements":[
+        {
+            "old": {
+                "path":"gitlab.protontech.ch/ProtonVPN/clients-shared",
+                "version": "v0.0.0"
+            },
+            "local_path":"/absolute/path/to/clients-shared/"
+        }
+    ]
+}
