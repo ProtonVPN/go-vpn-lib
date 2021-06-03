@@ -343,7 +343,16 @@ func (conn *AgentConnection) sendFeaturesDiff(socket *MessageSocket) {
 	if conn.Status != nil {
 		diff := conn.Status.Features.diffTo(&conn.requestedFeatures)
 		if len(diff.fields) > 0 {
+			conn.invalidateFeatures(diff)
 			socket.send <- createMessage("features-set", diff)
+		}
+	}
+}
+
+func (conn *AgentConnection) invalidateFeatures(diff *Features) {
+	if conn.Status != nil {
+		for k := range diff.fields {
+			delete(conn.Status.Features.fields, k)
 		}
 	}
 }
