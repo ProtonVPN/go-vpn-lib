@@ -68,7 +68,7 @@ func (feat *Features) GetKeys() *StringArray {
 }
 
 func (feat *Features) SetInt(name string, value int) {
-	feat.fields[name] = value
+	feat.fields[name] = float64(value)
 }
 
 func (feat *Features) GetInt(name string) int {
