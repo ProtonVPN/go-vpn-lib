@@ -1,8 +1,8 @@
 package main
 
 import (
+	"../localAgent"
 	"C"
-	"clients-shared/localAgent"
 	"encoding/json"
 	"strings"
 )
