@@ -67,6 +67,10 @@ func (feat *Features) GetKeys() *StringArray {
 	return &StringArray{values: result}
 }
 
+func (feat *Features) Remove(key string) {
+	delete(feat.fields, key)
+}
+
 func (feat *Features) SetInt(name string, value int) {
 	feat.fields[name] = float64(value)
 }
