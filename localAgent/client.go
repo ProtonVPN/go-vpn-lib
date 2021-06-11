@@ -312,6 +312,9 @@ func (conn *AgentConnection) tlsConnectionLoop(
 	var socket *MessageSocket
 	socket, err = socketFactory(cert, serverCAsPEM, host, certServerName, conn.client.Log)
 
+	for len(conn.updateFeatures) > 0 {
+		<-conn.updateFeatures
+	}
 	conn.featuresSent = false
 	if !conn.closed && err == nil {
 		conn.client.Log("LocalAgent: established tls connection")
