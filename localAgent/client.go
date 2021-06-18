@@ -128,6 +128,7 @@ type NativeClient interface {
 	Log(text string)
 	OnState(state State)
 	OnError(code int, description string)
+	OnStatusUpdate(status *StatusMessage)
 }
 
 var initialBackoff = 250 * time.Millisecond
@@ -401,6 +402,7 @@ func (conn *AgentConnection) parseStatus(rawStatus json.RawMessage, socket *Mess
 	case "connected":
 		conn.setState(consts.StateConnected)
 	}
+	conn.client.OnStatusUpdate(&status)
 	if conn.Status.Reason != nil {
 		conn.client.OnError(conn.Status.Reason.Code, conn.Status.Reason.Description)
 	}

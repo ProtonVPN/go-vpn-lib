@@ -35,6 +35,10 @@ func (c *WindowsClient) OnError(code int, desc string) {
 	c.eventChannel <- &Event{EventType: "error", Code: code, Desc: desc}
 }
 
+func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
+	c.eventChannel <- &Event{EventType: "status"}
+}
+
 //export Connect
 func Connect(
 	clientCertPEM,
