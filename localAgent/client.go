@@ -43,24 +43,24 @@ type Consts struct {
 	StateDisconnected           State
 
 	// Error codes
-	ErrorCodeGuestSession          ErrorCode
-	ErrorCodeRestrictedServer      ErrorCode
-	ErrorCodeBadCertSignature      ErrorCode
-	ErrorCodeCertNotProvided       ErrorCode
-	ErrorCodeCertificateExpired    ErrorCode
-	ErrorCodeCertificateRevoked    ErrorCode
-	ErrorCodeMaxSessionsUnknown    ErrorCode
-	ErrorCodeMaxSessionsFree       ErrorCode
-	ErrorCodeMaxSessionsBasic      ErrorCode
-	ErrorCodeMaxSessionsPlus       ErrorCode
-	ErrorCodeMaxSessionsVisionary  ErrorCode
-	ErrorCodeMaxSessionsPro        ErrorCode
-	ErrorCodeKeyUsedMultipleTimes  ErrorCode
-	ErrorCodeServerError           ErrorCode
-	ErrorCodePolicyViolation1      ErrorCode
-	ErrorCodePolicyViolation2      ErrorCode
-	ErrorCodeUserTorrentNotAllowed ErrorCode
-	ErrorCodeUserBadBehavior       ErrorCode
+	ErrorCodeGuestSession              ErrorCode
+	ErrorCodeRestrictedServer          ErrorCode
+	ErrorCodeBadCertSignature          ErrorCode
+	ErrorCodeCertNotProvided           ErrorCode
+	ErrorCodeCertificateExpired        ErrorCode
+	ErrorCodeCertificateRevoked        ErrorCode
+	ErrorCodeMaxSessionsUnknown        ErrorCode
+	ErrorCodeMaxSessionsFree           ErrorCode
+	ErrorCodeMaxSessionsBasic          ErrorCode
+	ErrorCodeMaxSessionsPlus           ErrorCode
+	ErrorCodeMaxSessionsVisionary      ErrorCode
+	ErrorCodeMaxSessionsPro            ErrorCode
+	ErrorCodeKeyUsedMultipleTimes      ErrorCode
+	ErrorCodeServerError               ErrorCode
+	ErrorCodePolicyViolationLowPlan    ErrorCode
+	ErrorCodePolicyViolationDelinquent ErrorCode
+	ErrorCodeUserTorrentNotAllowed     ErrorCode
+	ErrorCodeUserBadBehavior           ErrorCode
 
 	// NOTE: initialize in var consts when adding new
 }
@@ -76,24 +76,24 @@ var consts = &Consts{
 	StateClientCertificateError: "ClientCertificateError",
 	StateDisconnected:           "Disconnected",
 
-	ErrorCodeGuestSession:          86100,
-	ErrorCodeRestrictedServer:      86104,
-	ErrorCodeBadCertSignature:      86105,
-	ErrorCodeCertNotProvided:       86106,
-	ErrorCodeCertificateExpired:    86101,
-	ErrorCodeCertificateRevoked:    86102,
-	ErrorCodeMaxSessionsUnknown:    86110,
-	ErrorCodeMaxSessionsFree:       86111,
-	ErrorCodeMaxSessionsBasic:      86112,
-	ErrorCodeMaxSessionsPlus:       86113,
-	ErrorCodeMaxSessionsVisionary:  86114,
-	ErrorCodeMaxSessionsPro:        86115,
-	ErrorCodeKeyUsedMultipleTimes:  86103,
-	ErrorCodeServerError:           86150,
-	ErrorCodePolicyViolation1:      86151,
-	ErrorCodePolicyViolation2:      86152,
-	ErrorCodeUserTorrentNotAllowed: 86153,
-	ErrorCodeUserBadBehavior:       86154,
+	ErrorCodeGuestSession:              86100,
+	ErrorCodeRestrictedServer:          86104,
+	ErrorCodeBadCertSignature:          86105,
+	ErrorCodeCertNotProvided:           86106,
+	ErrorCodeCertificateExpired:        86101,
+	ErrorCodeCertificateRevoked:        86102,
+	ErrorCodeMaxSessionsUnknown:        86110,
+	ErrorCodeMaxSessionsFree:           86111,
+	ErrorCodeMaxSessionsBasic:          86112,
+	ErrorCodeMaxSessionsPlus:           86113,
+	ErrorCodeMaxSessionsVisionary:      86114,
+	ErrorCodeMaxSessionsPro:            86115,
+	ErrorCodeKeyUsedMultipleTimes:      86103,
+	ErrorCodeServerError:               86150,
+	ErrorCodePolicyViolationLowPlan:    86151,
+	ErrorCodePolicyViolationDelinquent: 86152,
+	ErrorCodeUserTorrentNotAllowed:     86153,
+	ErrorCodeUserBadBehavior:           86154,
 }
 
 // Constants export constants for the client
