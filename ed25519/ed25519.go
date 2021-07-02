@@ -20,15 +20,13 @@
 package ed25519
 
 import (
+	"clients-shared/ed25519/constants"
 	"crypto/ed25519"
 	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 )
-
-var ed25519PKIXPublicPrefix = []byte{0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00}
-var ed25519PKIXPrivatePrefix = []byte{0x30, 0x2E, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20}
 
 type KeyPair struct {
 	private ed25519.PrivateKey
@@ -66,7 +64,7 @@ func (key KeyPair) PublicKeyPKIX() ([]byte, error) {
 
 // PrivateKeyPKIX private key in PKIX, ASN.1 DER format
 func (key KeyPair) PrivateKeyPKIX() []byte {
-	return append(ed25519PKIXPrivatePrefix[:], key.PrivateKeyBytes()...)
+	return append(constants.Ed25519PKIXPrivatePrefix[:], key.PrivateKeyBytes()...)
 }
 
 // PublicKeyPKIXBase64 public key in PKIX, ASN.1 DER in Base64
