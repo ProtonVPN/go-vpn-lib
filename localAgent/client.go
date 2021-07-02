@@ -146,11 +146,11 @@ func NewAgentConnection(
 	features *Features,
 	connectivity bool,
 ) (*AgentConnection, error) {
-	return newAgentConnectionInternal(clientCertPEM, clientKeyPEM, serverCAsPEM, host, certServerName, client, features,
+	return newAgentConnection(clientCertPEM, clientKeyPEM, serverCAsPEM, host, certServerName, client, features,
 		connectivity, openSocket)
 }
 
-func newAgentConnectionInternal(
+func newAgentConnection(
 	clientCertPEM,
 	clientKeyPEM,
 	serverCAsPEM string,
@@ -305,8 +305,7 @@ func (conn *AgentConnection) tlsConnectionLoop(
 	host string,
 	certServerName string,
 	socketFactory messageSocketFactory,
-) error {
-	var err error
+) (err error) {
 	conn.setState(consts.StateConnecting)
 	conn.client.Log("LocalAgent: establishing tls connection...")
 

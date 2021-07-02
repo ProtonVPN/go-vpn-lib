@@ -116,7 +116,7 @@ func (client mockNativeClient) OnError(code int, description string) {
 }
 
 func createTestConnection(client mockNativeClient, features *Features, socketFactory messageSocketFactory) *AgentConnection {
-	agent, _ := newAgentConnectionInternal(testCert, testKey, "", "localhost", "localhost",
+	agent, _ := newAgentConnection(testCert, testKey, "", "localhost", "localhost",
 		client, features, true, socketFactory)
 	return agent
 }
