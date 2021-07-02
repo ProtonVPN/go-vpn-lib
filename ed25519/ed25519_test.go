@@ -66,3 +66,17 @@ func TestKeyPair_ToX25519Base64(t *testing.T) {
 	expectedX25519 := "uDiY1T9gYZO90r2fC63At9T2CnV1X8/NfWaQ/v/gT2g="
 	assert.Equal(expectedX25519, testKey.ToX25519Base64())
 }
+
+func TestKeyPair_Clear(t *testing.T) {
+	assert := assert.New(t)
+	key, _ := NewKeyPair()
+	key.Clear()
+	private := key.PrivateKeyBytes()
+	for i := range private {
+		assert.Equal(uint8(0), private[i])
+	}
+	public := key.PublicKeyBytes()
+	for i := range public {
+		assert.Equal(uint8(0), public[i])
+	}
+}

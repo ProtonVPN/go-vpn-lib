@@ -41,6 +41,13 @@ func NewKeyPair() (*KeyPair, error) {
 	return &KeyPair{pri}, nil
 }
 
+// Clear clears memory storing key pair
+func (key KeyPair) Clear() {
+	for i := range key.private {
+		key.private[i] = 0
+	}
+}
+
 func (key KeyPair) PublicKeyBytes() []byte {
 	return key.private[ed25519.SeedSize:]
 }
