@@ -174,7 +174,11 @@ func newAgentConnection(
 	conn.closeChannel = make(chan bool, 1)
 	conn.client = client
 	conn.updateFeatures = make(chan bool, 1)
-	conn.requestedFeatures = *features
+	if features != nil {
+		conn.requestedFeatures = *features
+	} else {
+		conn.requestedFeatures = *NewFeatures()
+	}
 
 	go conn.connectionLoop(clientCert, serverCAsPEM, host, certServerName, socketFactory)
 	return conn, nil

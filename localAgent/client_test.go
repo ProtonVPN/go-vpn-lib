@@ -38,7 +38,7 @@ var testStates []State
 
 var jailedStatusResponse = `{
     "status": {
-        "state": "SOFT_JAILED",
+        "state": "jailed",
         "features": {
             "bouncing": "0",
             "randomized-nat": false,
@@ -115,6 +115,8 @@ func (client mockNativeClient) OnError(code int, description string) {
 	testErrors = append(testErrors, ErrorMessage{Code: code, Description: description})
 }
 
+func (client mockNativeClient) OnStatusUpdate(status *StatusMessage) {}
+
 func createTestConnection(client mockNativeClient, features *Features, socketFactory messageSocketFactory) *AgentConnection {
 	agent, _ := newAgentConnection(testCert, testKey, "", "localhost", "localhost",
 		client, features, true, socketFactory)
@@ -163,9 +165,9 @@ func TestAgentConnection_ConnectAndUnjail(t *testing.T) {
 	assert := assert.New(t)
 	setup()
 
-	unjaiedStatusResponse := strings.Replace(jailedStatusResponse, "SOFT_JAILED", "connected", -1)
+	unjaiedStatusResponse := strings.Replace(jailedStatusResponse, "jailed", "connected", -1)
 
-	mockSocket.mockSendResults(nil, nil)
+	mockSocket.mockSendResults(nil)
 	mockSocket.mockRecvResults(
 		jailedStatusResponse,
 		unjaiedStatusResponse)
