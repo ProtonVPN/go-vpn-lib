@@ -19,6 +19,7 @@
 package ed25519
 
 import (
+	"crypto/ed25519"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -33,7 +34,15 @@ var publicTest = []byte{
 	0xaf, 0x75, 0x1b, 0x7d, 0x9d, 0xc8, 0xe8, 0x16, 0x13, 0xe4, 0x61, 0xed, 0xf6, 0x64, 0x8c, 0x89,
 }
 
-var testKey = CreateKeyPair(privateTest, publicTest)
+var testKey = createKeyPair(privateTest, publicTest)
+
+// createKeyPair creates KeyPair based on provided private and public keys. Only for test use.
+func createKeyPair(pri []byte, pub []byte) *KeyPair {
+	private := make([]byte, 2*ed25519.SeedSize)
+	copy(private[:ed25519.SeedSize], pri)
+	copy(private[ed25519.SeedSize:], pub)
+	return &KeyPair{private}
+}
 
 func TestKeyPair_PemKeys(t *testing.T) {
 	assert := assert.New(t)

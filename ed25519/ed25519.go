@@ -32,14 +32,6 @@ type KeyPair struct {
 	private ed25519.PrivateKey
 }
 
-// CreateKeyPair creates KeyPair based on provided private and public keys. Only for test use.
-func CreateKeyPair(pri []byte, pub []byte) *KeyPair {
-	key, _ := NewKeyPair()
-	copy(key.private[:ed25519.SeedSize], pri)
-	copy(key.private[ed25519.SeedSize:], pub)
-	return key
-}
-
 // NewKeyPair generates new ED25519 key pair
 func NewKeyPair() (*KeyPair, error) {
 	_, pri, err := ed25519.GenerateKey(nil)
