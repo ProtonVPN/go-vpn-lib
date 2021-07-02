@@ -26,6 +26,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"github.com/pkg/errors"
 )
 
 type KeyPair struct {
@@ -36,7 +37,7 @@ type KeyPair struct {
 func NewKeyPair() (*KeyPair, error) {
 	_, pri, err := ed25519.GenerateKey(nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "ed25519: unable to generate key pair")
 	}
 	return &KeyPair{pri}, nil
 }
@@ -58,7 +59,11 @@ func (key KeyPair) PrivateKeyBytes() []byte {
 
 // PublicKeyPKIX returns public key in PKIX, ASN.1 DER format
 func (key KeyPair) PublicKeyPKIX() ([]byte, error) {
-	return x509.MarshalPKIXPublicKey(key.private.Public())
+	bytes, err := x509.MarshalPKIXPublicKey(key.private.Public())
+	if err != nil {
+		return nil, errors.Wrap(err, "ed25519: failed marshalling of public key")
+	}
+	return bytes, nil
 }
 
 // PrivateKeyPKIX private key in PKIX, ASN.1 DER format
