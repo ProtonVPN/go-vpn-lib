@@ -48,7 +48,7 @@ func Connect(
 	certServerName,
 	featuresJson string,
 	connectivity bool,
-) string {
+) []byte {
 
 	var clientCertPEMCopy = deepCopy(clientCertPEM)
 	var clientKeyPEMCopy = deepCopy(clientKeyPEM)
@@ -62,7 +62,7 @@ func Connect(
 	if len(featuresJsonCopy) > 0 {
 		err := json.Unmarshal([]byte(featuresJsonCopy), &features)
 		if err != nil {
-			return err.Error()
+			return []byte(err.Error())
 		}
 	}
 	currentClient = new(WindowsClient)
@@ -72,29 +72,29 @@ func Connect(
 		features, connectivity)
 	if err != nil {
 		currentConnection = nil
-		return err.Error()
+		return []byte(err.Error())
 	}
-	return ""
+	return []byte("")
 }
 
 //export GetEvent
-func GetEvent() string {
+func GetEvent() []byte {
 	client := currentClient
 	if client == nil {
-		return ""
+		return []byte("")
 	}
 	event := <-client.eventChannel
 	if event == nil {
-		return ""
+		return []byte("")
 	}
 	result, _ := json.Marshal(event)
-	return string(result)
+	return []byte(string(result))
 }
 
 //export GetStatus
-func GetStatus() string {
+func GetStatus() []byte {
 	result, _ := json.Marshal(currentConnection.Status)
-	return string(result)
+	return []byte(string(result))
 }
 
 //export SetFeatures
