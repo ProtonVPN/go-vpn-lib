@@ -38,6 +38,7 @@ type Consts struct {
 	StateHardJailed             State
 	StateConnectionError        State
 	StateServerUnreachable      State
+	StateWaitingForNetwork      State
 	StateServerCertificateError State
 	StateClientCertificateError State
 	StateDisconnected           State
@@ -72,6 +73,7 @@ var consts = &Consts{
 	StateHardJailed:             "HardJailed",
 	StateConnectionError:        "ConnectionError",
 	StateServerUnreachable:      "ServerUnreachable",
+	StateWaitingForNetwork:      "WaitingForNetwork",
 	StateServerCertificateError: "ServerCertificateError",
 	StateClientCertificateError: "ClientCertificateError",
 	StateDisconnected:           "Disconnected",
@@ -250,6 +252,7 @@ func (conn *AgentConnection) connectionLoop(
 
 		for !conn.connectivity && !conn.closed {
 			conn.client.Log("LocalAgent waiting for connectivity...")
+			conn.setState(consts.StateWaitingForNetwork)
 			select {
 			case <-conn.updateConnectivity:
 			case <-conn.closeChannel:
