@@ -1,10 +1,11 @@
 package main
 
 import (
-	"../localAgent"
 	"C"
 	"encoding/json"
 	"strings"
+	"../localAgent"
+	"../vpnPing"
 )
 
 var currentConnection *localAgent.AgentConnection
@@ -115,6 +116,16 @@ func Close() {
 	currentConnection = nil
 	close(currentClient.eventChannel)
 	currentClient = nil
+}
+
+//export Ping
+func Ping(ip string, port int, serverKeyBase64 string, timeoutSeconds int) []byte {
+	result, error := vpnPing.PingSync(ip, port, serverKeyBase64, timeoutSeconds)
+	if (result) {
+		return []byte("")
+	} else {
+		return []byte(error.Error())
+	}
 }
 
 func deepCopy(s string) string {
