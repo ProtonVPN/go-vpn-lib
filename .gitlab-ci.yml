@@ -1,0 +1,14 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  MODULES: ./localAgent ./ed25519 ./vpnPing
+  GOLANG_VERSION: 1.16.6
+
+stages:
+  - test
+  - build
+
+test:
+  image: $CI_REGISTRY/infra/kubernetes/images/golang:latest
+  stage: test
+  script:
+    - go test $MODULES

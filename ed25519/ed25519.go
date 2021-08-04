@@ -20,7 +20,6 @@
 package ed25519
 
 import (
-	"clients-shared/ed25519/constants"
 	"crypto/ed25519"
 	"crypto/sha512"
 	"crypto/x509"
@@ -68,7 +67,7 @@ func (key KeyPair) PublicKeyPKIX() ([]byte, error) {
 
 // PrivateKeyPKIX private key in PKIX, ASN.1 DER format
 func (key KeyPair) PrivateKeyPKIX() []byte {
-	return append(constants.Ed25519PKIXPrivatePrefix[:], key.PrivateKeyBytes()...)
+	return append(Ed25519PKIXPrivatePrefix[:], key.PrivateKeyBytes()...)
 }
 
 // PublicKeyPKIXBase64 public key in PKIX, ASN.1 DER in Base64
