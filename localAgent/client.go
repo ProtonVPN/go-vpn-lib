@@ -268,7 +268,7 @@ func (conn *AgentConnection) connectionLoop(
 					switch translateError(err) {
 					case ErrorInvalidServerCert:
 						conn.terminalState(consts.StateServerCertificateError)
-					case ErrorExpiredCert:
+					case ErrorClientCert:
 						conn.terminalState(consts.StateClientCertificateError)
 					case ErrorUnreachable:
 						conn.setState(consts.StateServerUnreachable)

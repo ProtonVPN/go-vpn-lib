@@ -28,7 +28,7 @@ import (
 type ErrorType = int
 
 const (
-	ErrorExpiredCert ErrorType = iota
+	ErrorClientCert ErrorType = iota
 	ErrorInvalidServerCert
 	ErrorUnreachable
 	ErrorOther
@@ -43,8 +43,9 @@ func translateError(err error) ErrorType {
 		return ErrorInvalidServerCert
 	default:
 		errString := err.Error()
-		if strings.Contains(errString, "expired certificate") {
-			return ErrorExpiredCert
+		if strings.Contains(errString, "expired certificate") ||
+			strings.Contains(errString, "unknown certificate authority") {
+			return ErrorClientCert
 		} else if strings.Contains(errString, "connection refused") ||
 			strings.Contains(errString, "timed out") ||
 			strings.Contains(errString, "timeout") {
