@@ -283,19 +283,17 @@ func (conn *AgentConnection) connectionLoop(
 					nextBackoff = maxDuration(initialBackoff, nextBackoff)
 					nextBackoff += multiplyDuration(nextBackoff, 0.2*rand.Float64()) // random 0-20% increase
 
-					hadConnectivity := conn.connectivity
-					if hadConnectivity {
+					if conn.connectivity {
 						conn.client.Log(fmt.Sprint("Local agent retry in ", nextBackoff.Seconds(), "s"))
-					}
-					select {
-					case <-conn.closeChannel:
-					case <-time.After(nextBackoff):
-						break
-					case <-conn.updateConnectivity:
-						if conn.connectivity && !hadConnectivity {
+						select {
+						case <-conn.closeChannel:
+						case <-time.After(nextBackoff):
 							break
+						case <-conn.updateConnectivity:
+							if !conn.connectivity {
+								break
+							}
 						}
-						hadConnectivity = conn.connectivity
 					}
 
 					nextBackoff = minDuration(nextBackoff*time.Duration(backoffMultiplier), maxBackoff)
