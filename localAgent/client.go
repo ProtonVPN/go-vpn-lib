@@ -21,6 +21,7 @@ package localAgent
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -169,6 +170,11 @@ func newAgentConnection(
 		client.Log("LocalAgent cert/key error: " + err.Error())
 		return nil, err
 	}
+	leafCert, err := x509.ParseCertificate(clientCert.Certificate[0])
+	if err != nil {
+		client.Log("LocalAgent leaf certificate error: " + err.Error())
+		return nil, err
+	}
 	conn := new(AgentConnection)
 	conn.closed = false
 	conn.connectivity = connectivity
@@ -182,7 +188,7 @@ func newAgentConnection(
 		conn.requestedFeatures = *NewFeatures()
 	}
 
-	go conn.connectionLoop(clientCert, serverCAsPEM, host, certServerName, socketFactory)
+	go conn.connectionLoop(clientCert, leafCert, serverCAsPEM, host, certServerName, socketFactory)
 	return conn, nil
 }
 
@@ -241,6 +247,7 @@ func (conn *AgentConnection) SetConnectivity(available bool) {
 
 func (conn *AgentConnection) connectionLoop(
 	cert tls.Certificate,
+	leafCert *x509.Certificate,
 	serverCAsPEM string,
 	host string,
 	certServerName string,
@@ -273,7 +280,11 @@ func (conn *AgentConnection) connectionLoop(
 					case ErrorUnreachable:
 						conn.setState(consts.StateServerUnreachable)
 					default:
-						conn.setState(consts.StateConnectionError)
+						if time.Now().After(leafCert.NotAfter) {
+							conn.terminalState(consts.StateClientCertificateError)
+						} else {
+							conn.setState(consts.StateConnectionError)
+						}
 					}
 				}
 				if !conn.closed {
