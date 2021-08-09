@@ -25,12 +25,21 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"time"
 )
 
-func PingSync(ip string, port int, serverKeyBase64 string, timeoutMilliseconds int) (bool, error) {
+func PingSync(ip string, port int, serverKeyBase64 string, timeoutMilliseconds int) bool {
+	result, err := PingSyncWithError(ip, port, serverKeyBase64, timeoutMilliseconds)
+	if err != nil {
+		println("PingSync error: " + err.Error())
+	}
+	return result
+}
+
+func PingSyncWithError(ip string, port int, serverKeyBase64 string, timeoutMilliseconds int) (bool, error) {
 	key, err := base64.StdEncoding.DecodeString(serverKeyBase64)
 	if err != nil {
 		return false, err
@@ -59,7 +68,10 @@ func PingSync(ip string, port int, serverKeyBase64 string, timeoutMilliseconds i
 		return false, err
 	}
 
-	return bytes.Compare(result, []byte{0xfe, 0x01, 0x01}) == 0, nil
+	if bytes.Compare(result, []byte{0xfe, 0x01, 0x01}) != 0 {
+		return false, errors.New(fmt.Sprint("PingSync: unexpected response from ", ip, ":", port))
+	}
+	return true, nil
 }
 
 func pingUDP(address string, timeoutMilliseconds int, data []byte, result []byte) error {
