@@ -119,13 +119,8 @@ func Close() {
 }
 
 //export Ping
-func Ping(ip string, port int, serverKeyBase64 string, timeoutSeconds int) []byte {
-	result, error := vpnPing.PingSync(ip, port, serverKeyBase64, timeoutSeconds)
-	if (result) {
-		return []byte("")
-	} else {
-		return []byte(error.Error())
-	}
+func Ping(ip string, port int, serverKeyBase64 string, timeoutSeconds int) bool {
+	return vpnPing.PingSync(ip, port, serverKeyBase64, timeoutSeconds)
 }
 
 func deepCopy(s string) string {
