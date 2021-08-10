@@ -1,0 +1,37 @@
+{
+  "go_version":"1.16.4",
+  "build_dir":"build",
+  "out_dir":"out",
+  "go_mobile_dir":"mobile",
+  "go_mobile_flags": [
+    "-x",
+    "-ldflags=\"-s -w\""
+  ],
+  "build_name":"govpn",
+  "build_tag": "v0.0.0+bd9454f3fa013fe4257a1d30b3c3cb015399839d+cf23cf884f6b689be85d87ebcf74c7ff7aee9c9d",
+  "java_pkg":"me.proton.govpn",
+  "targets":["android"],
+  "requirements": [
+    {
+      "module":{
+        "path":"github.com/ProtonMail/go-srp",
+        "version": "bd9454f3fa013fe4257a1d30b3c3cb015399839d"
+      }
+    },
+    {
+      "module": {
+        "path": "gitlab.protontech.ch/ProtonVPN/development/clients-shared.git",
+        "version": "v0.0.0"
+      },
+      "packages": ["ed25519", "localAgent", "vpnPing"]
+    }
+  ],
+  "replacements": [
+    {
+      "old":{
+        "path":"gitlab.protontech.ch/ProtonVPN/development/clients-shared.git"
+      },
+      "local_path": "/builds/ProtonVPN/development/clients-shared"
+    }
+  ]
+}
