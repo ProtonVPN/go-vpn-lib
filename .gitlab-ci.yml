@@ -29,7 +29,7 @@ build android:
     - export GOPRIVATE=gitlab.protontech.ch
     - git config --global url."git@gitlab.protontech.ch:".insteadOf "https://gitlab.protontech.ch/"
     - cd ..
-    - git clone $GOMOBILE_BUILD_REPO
+    - git clone https://vpn:$GOMOBILE_BUILD_REPO_PAT@$GOMOBILE_BUILD_REPO
   script:
     - cd gomobile-build-script
     - make clean
@@ -41,6 +41,42 @@ build android:
     - cp $OUTDIR/android/$BUILD_NAME-sources.jar $ARTIFACTS_DIR/
     - cp $BUILD_CONFIG $ARTIFACTS_DIR/build-config.json
     - make clean
+  artifacts:
+    paths:
+      - artifacts/*
+
+build iOS:
+  stage: build
+  when: manual
+  tags:
+    - iOS-deploy
+  before_script:
+    - export BUILD_CONFIG=`pwd`/build/apple.json
+    - export ARTIFACTS_DIR=`pwd`/artifacts
+    - brew install make jq wget  || true
+    - jq ".replacements[0].local_path |= \"`pwd`\"" $BUILD_CONFIG.template > $BUILD_CONFIG
+    - GOLANG_VERSION=$(cat $BUILD_CONFIG | jq -r '.go_version')
+    - wget -q -O go.tgz "https://golang.org/dl/go$GOLANG_VERSION.darwin-amd64.tar.gz"
+    - tar -C . -xzf go.tgz;
+    - rm go.tgz
+    - export PATH="$(pwd)/go/bin:$PATH";
+    - go version
+    - cd ..
+    - GOMOBILE_DIR=`basename $GOMOBILE_BUILD_REPO .git`
+    - if cd $GOMOBILE_DIR; then git pull; else git clone https://vpn:$GOMOBILE_BUILD_REPO_PAT@$GOMOBILE_BUILD_REPO && cd $GOMOBILE_DIR; fi
+  script:
+    - make clean
+    - make build cfg=$BUILD_CONFIG
+    - mkdir $ARTIFACTS_DIR
+    - OUTDIR=$(cat $BUILD_CONFIG | jq -r '.out_dir')
+    - BUILD_NAME=$(cat $BUILD_CONFIG | jq -r '.build_name')
+    - cp -r $OUTDIR/$BUILD_NAME.xcframework $ARTIFACTS_DIR
+    - cp $BUILD_CONFIG $ARTIFACTS_DIR/build-config.json
+  after_script:
+    - GOMOBILE_DIR=`basename $GOMOBILE_BUILD_REPO .git`
+    - cd $GOMOBILE_DIR
+    - make clean
+    - rm -r go
   artifacts:
     paths:
       - artifacts/*

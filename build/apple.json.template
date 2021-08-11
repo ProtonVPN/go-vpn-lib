@@ -24,7 +24,7 @@
                 "path":"gitlab.protontech.ch/ProtonVPN/clients-shared",
                 "version": "v0.0.0"
             },
-            "packages": ["ed25519", "localAgent"]
+            "packages": ["ed25519", "localAgent", "vpnPing"]
         }
     ],
     "replacements":[
@@ -33,7 +33,7 @@
                 "path":"gitlab.protontech.ch/ProtonVPN/clients-shared",
                 "version": "v0.0.0"
             },
-            "local_path":"/absolute/path/to/clients-shared/"
+            "local_path":"../clients-shared/"
         },
         {
             "old": {
