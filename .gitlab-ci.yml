@@ -20,7 +20,9 @@ build android:
     - apt-get update && apt-get install -y make jq wget tar;
     - apt-get install make
     - GOLANG_VERSION=$(cat $BUILD_CONFIG | jq -r '.go_version');
+    - GOLANG_CHECKSUM=$(cat $BUILD_CONFIG | jq -r '.go_SHA256_checksum');
     - wget -q -O go.tgz "https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz";
+    - echo "$GOLANG_CHECKSUM go.tgz" | sha256sum -c
     - tar -C /usr/local -xzf go.tgz;
     - rm go.tgz;
     - export PATH="/usr/local/go/bin:$PATH";
@@ -56,7 +58,9 @@ build iOS:
     - brew install make jq wget  || true
     - jq ".replacements[0].local_path |= \"`pwd`\"" $BUILD_CONFIG.template > $BUILD_CONFIG
     - GOLANG_VERSION=$(cat $BUILD_CONFIG | jq -r '.go_version')
-    - wget -q -O go.tgz "https://golang.org/dl/go$GOLANG_VERSION.darwin-amd64.tar.gz"
+    - GOLANG_CHECKSUM=$(cat $BUILD_CONFIG | jq -r '.go_SHA256_checksum');
+    - wget -q -O go.tgz "https://golang.org/dl/go$GOLANG_VERSION.darwin-amd64.tar.gz";
+    - echo "$GOLANG_CHECKSUM  go.tgz" | shasum -a 256 -c
     - tar -C . -xzf go.tgz;
     - rm go.tgz
     - export PATH="$(pwd)/go/bin:$PATH";
