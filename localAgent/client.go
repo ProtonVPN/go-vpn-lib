@@ -33,16 +33,17 @@ type ErrorCode = int
 
 type Consts struct {
 	// States
-	StateConnecting             State
-	StateConnected              State
-	StateSoftJailed             State
-	StateHardJailed             State
-	StateConnectionError        State
-	StateServerUnreachable      State
-	StateWaitingForNetwork      State
-	StateServerCertificateError State
-	StateClientCertificateError State
-	StateDisconnected           State
+	StateConnecting                    State
+	StateConnected                     State
+	StateSoftJailed                    State
+	StateHardJailed                    State
+	StateConnectionError               State
+	StateServerUnreachable             State
+	StateWaitingForNetwork             State
+	StateServerCertificateError        State
+	StateClientCertificateExpiredError State
+	StateClientCertificateUnknownCA    State
+	StateDisconnected                  State
 
 	// Error codes
 	ErrorCodeGuestSession              ErrorCode
@@ -68,16 +69,17 @@ type Consts struct {
 }
 
 var consts = &Consts{
-	StateConnecting:             "Connecting",
-	StateConnected:              "Connected",
-	StateSoftJailed:             "SoftJailed",
-	StateHardJailed:             "HardJailed",
-	StateConnectionError:        "ConnectionError",
-	StateServerUnreachable:      "ServerUnreachable",
-	StateWaitingForNetwork:      "WaitingForNetwork",
-	StateServerCertificateError: "ServerCertificateError",
-	StateClientCertificateError: "ClientCertificateError",
-	StateDisconnected:           "Disconnected",
+	StateConnecting:                    "Connecting",
+	StateConnected:                     "Connected",
+	StateSoftJailed:                    "SoftJailed",
+	StateHardJailed:                    "HardJailed",
+	StateConnectionError:               "ConnectionError",
+	StateServerUnreachable:             "ServerUnreachable",
+	StateWaitingForNetwork:             "WaitingForNetwork",
+	StateServerCertificateError:        "ServerCertificateError",
+	StateClientCertificateExpiredError: "ClientCertificateExpiredError",
+	StateClientCertificateUnknownCA:    "ClientCertificateUnknownCA",
+	StateDisconnected:                  "Disconnected",
 
 	ErrorCodeGuestSession:              86100,
 	ErrorCodeRestrictedServer:          86104,
@@ -275,13 +277,15 @@ func (conn *AgentConnection) connectionLoop(
 					switch translateError(err) {
 					case ErrorInvalidServerCert:
 						conn.terminalState(consts.StateServerCertificateError)
-					case ErrorClientCert:
-						conn.terminalState(consts.StateClientCertificateError)
+					case ErrorClientCertExpired:
+						conn.terminalState(consts.StateClientCertificateExpiredError)
+					case ErrorClientCertUnknownCA:
+						conn.terminalState(consts.StateClientCertificateUnknownCA)
 					case ErrorUnreachable:
 						conn.setState(consts.StateServerUnreachable)
 					default:
 						if time.Now().After(leafCert.NotAfter) {
-							conn.terminalState(consts.StateClientCertificateError)
+							conn.terminalState(consts.StateClientCertificateExpiredError)
 						} else {
 							conn.setState(consts.StateConnectionError)
 						}
