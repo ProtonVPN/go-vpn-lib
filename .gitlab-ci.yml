@@ -1,5 +1,6 @@
 variables:
   MODULES: ./localAgent ./ed25519 ./vpnPing
+  ARTIFACTS_DIR: artifacts
 
 stages:
   - test
@@ -16,7 +17,7 @@ build android:
   stage: build
   before_script:
     - export BUILD_CONFIG=`pwd`/build/android.json
-    - export ARTIFACTS_DIR=`pwd`/artifacts
+    - export ARTIFACTS_PATH=`pwd`/$ARTIFACTS_DIR
     - apt-get update && apt-get install -y make jq wget tar;
     - apt-get install make
     - GOLANG_VERSION=$(cat $BUILD_CONFIG | jq -r '.go_version');
@@ -36,16 +37,16 @@ build android:
     - cd gomobile-build-script
     - make clean
     - make build cfg=$BUILD_CONFIG
-    - mkdir $ARTIFACTS_DIR
+    - mkdir $ARTIFACTS_PATH
     - OUTDIR=$(cat $BUILD_CONFIG | jq -r '.out_dir');
     - BUILD_NAME=$(cat $BUILD_CONFIG | jq -r '.build_name');
-    - cp $OUTDIR/android/$BUILD_NAME.aar $ARTIFACTS_DIR/
-    - cp $OUTDIR/android/$BUILD_NAME-sources.jar $ARTIFACTS_DIR/
-    - cp $BUILD_CONFIG $ARTIFACTS_DIR/build-config.json
+    - cp $OUTDIR/android/$BUILD_NAME.aar $ARTIFACTS_PATH/
+    - cp $OUTDIR/android/$BUILD_NAME-sources.jar $ARTIFACTS_PATH/
+    - cp $BUILD_CONFIG $ARTIFACTS_PATH/build-config.json
     - make clean
   artifacts:
     paths:
-      - artifacts/*
+      - $ARTIFACTS_DIR/*
 
 build iOS:
   stage: build
@@ -54,7 +55,7 @@ build iOS:
     - iOS-deploy
   before_script:
     - export BUILD_CONFIG=`pwd`/build/apple.json
-    - export ARTIFACTS_DIR=`pwd`/artifacts
+    - export ARTIFACTS_PATH=`pwd`/$ARTIFACTS_DIR
     - brew install make jq wget  || true
     - jq ".replacements[0].local_path |= \"`pwd`\"" $BUILD_CONFIG.template > $BUILD_CONFIG
     - GOLANG_VERSION=$(cat $BUILD_CONFIG | jq -r '.go_version')
@@ -71,11 +72,11 @@ build iOS:
   script:
     - make clean
     - make build cfg=$BUILD_CONFIG
-    - mkdir $ARTIFACTS_DIR
+    - mkdir $ARTIFACTS_PATH
     - OUTDIR=$(cat $BUILD_CONFIG | jq -r '.out_dir')
     - BUILD_NAME=$(cat $BUILD_CONFIG | jq -r '.build_name')
-    - cp -r $OUTDIR/$BUILD_NAME.xcframework $ARTIFACTS_DIR
-    - cp $BUILD_CONFIG $ARTIFACTS_DIR/build-config.json
+    - cp -r $OUTDIR/$BUILD_NAME.xcframework $ARTIFACTS_PATH
+    - cp $BUILD_CONFIG $ARTIFACTS_PATH/build-config.json
   after_script:
     - GOMOBILE_DIR=`basename $GOMOBILE_BUILD_REPO .git`
     - cd $GOMOBILE_DIR
@@ -83,4 +84,4 @@ build iOS:
     - rm -r go
   artifacts:
     paths:
-      - artifacts/*
+      - $ARTIFACTS_DIR/*
