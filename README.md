@@ -76,7 +76,7 @@ $ gomobile init
 ```
 * clone go-srp in the root dir of this project
 ```bash
-$ cd clients-shared
+$ cd go-vpn-lib
 $ git clone https://github.com/ProtonMail/go-srp.git
 ```
 * build library with gomobile
@@ -111,28 +111,28 @@ git clone git@gitlab.protontech.ch:crypto/gomobile-build-script.git
 Clone this repository 
 
 ```bash
-git clone git@gitlab.protontech.ch/ProtonVPN/clients-shared.git
+git clone git@github.com/ProtonVPN/go-vpn-lib.git
 ```
 
-(we are going to assume you cloned it into `~/Projects/Proton/VPN/clients-shared`). 
+(we are going to assume you cloned it into `~/Projects/Proton/VPN/go-vpn-lib`). 
 
 Go Mobile can only build code form public repositories. This repository is private so you need to clone it locally and use it for the build locally.
 
 In the cloned repository 
 
 ```bash
-cd ~/Projects/Proton/VPN/clients-shared
+cd ~/Projects/Proton/VPN/go-vpn-lub
 ```
 
 initialize a Go module
 
 ```bash
-go mod init gitlab.protontech.ch/ProtonVPN/clients-shared
+go mod init github.com/ProtonVPN/go-vpn-lib
 ```
 
 ### Build config
 
-The build config is located in `~/Projects/Proton/VPN/clients-shared/build/apple.json` but needs to be adjusted manually. 
+The build config is located in `~/Projects/Proton/VPN/go-vpn-lub/build/apple.json` but needs to be adjusted manually. 
 
 This config is set up to build the library for iOS and macOS together with the SRP library. Any app can only contain one Go Mobile library and the VPN app also needs the SRP library. Because of this you need to build one Go Mobile library that contains both SRP and the clients shared library for Wireguard.
 
@@ -141,7 +141,7 @@ First make sure the `go_version` in `build/apple.json` matches the Go version yo
 Then change the `local_path` in the `replacements` section to the full path of the folder where you cloned this repository
 
 ```json
-"local_path":"/absolute/path/to/clients-shared/"
+"local_path":"/absolute/path/to/go-vpn-lib/"
 ```
 
 ### Build
@@ -155,5 +155,5 @@ cd ~/Projects/Proton/gomobile-build-script
 and execute the build command pointing to the edited build config
 
 ```bash
-make build cfg=~/Projects/Proton/VPN/clients-shared/build/apple.json
+make build cfg=~/Projects/Proton/VPN/go-vpn-lib/build/apple.json
 ```

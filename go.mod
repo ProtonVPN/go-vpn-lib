@@ -1,4 +1,4 @@
-module gitlab.protontech.ch/ProtonVPN/development/clients-shared.git
+module github.com/ProtonVPN/go-vpn-lib
 
 go 1.16
 

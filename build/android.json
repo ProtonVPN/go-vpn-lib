@@ -21,7 +21,7 @@
     },
     {
       "module": {
-        "path": "gitlab.protontech.ch/ProtonVPN/development/clients-shared.git",
+        "path": "github.com/ProtonVPN/go-vpn-lib.git",
         "version": "v0.0.0"
       },
       "packages": ["ed25519", "localAgent", "vpnPing"]
@@ -30,9 +30,9 @@
   "replacements": [
     {
       "old":{
-        "path":"gitlab.protontech.ch/ProtonVPN/development/clients-shared.git"
+        "path":"github.com/ProtonVPN/go-vpn-lib.git"
       },
-      "local_path": "/builds/ProtonVPN/development/clients-shared"
+      "local_path": "/builds/ProtonVPN/development/go-vpn-lib"
     }
   ]
 }
