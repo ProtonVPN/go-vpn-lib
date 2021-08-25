@@ -65,6 +65,7 @@ publish android:
     # gomobile doesn't generate javadocs but it's required for publishing with sonatype
     - touch govpn-javadoc.jar
     - ./gradlew publish
+    - ./gradlew publishSlack
   artifacts:
     paths:
       - build/repo/*
