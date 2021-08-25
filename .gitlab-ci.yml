@@ -6,10 +6,13 @@ stages:
   - test
   - build
   - mirror
+  - publish
 
 test:
   image: $CI_REGISTRY/infra/kubernetes/images/golang:latest
   stage: test
+  tags:
+    - small
   script:
     - go test $MODULES
 
@@ -48,6 +51,23 @@ build android:
   artifacts:
     paths:
       - $ARTIFACTS_DIR/*
+
+publish android:
+  image: gitlab.protontech.ch:4567/protonvpn/android/android-app-new:branch-development
+  tags:
+    - small
+  stage: publish
+  when: manual
+  only:
+    refs:
+      - master
+  script:
+    # gomobile doesn't generate javadocs but it's required for publishing with sonatype
+    - touch govpn-javadoc.jar
+    - ./gradlew publish
+  artifacts:
+    paths:
+      - build/repo/*
 
 build iOS:
   stage: build
