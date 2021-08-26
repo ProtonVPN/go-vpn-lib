@@ -10,7 +10,7 @@
   ],
   "build_name":"govpn",
   "build_tag": "v0.0.0+bd9454f3fa013fe4257a1d30b3c3cb015399839d+cf23cf884f6b689be85d87ebcf74c7ff7aee9c9d",
-  "java_pkg":"me.proton.govpn",
+  "java_pkg":"me.proton.vpn.golib",
   "targets":["android"],
   "requirements": [
     {

@@ -21,7 +21,7 @@ afterEvaluate {
     publishing {
         publications {
             govpn(MavenPublication) {
-                groupId 'me.proton'
+                groupId 'me.proton.vpn'
                 artifactId 'go-vpn-lib'
                 version Helpers.getFullVersionName()
                 artifact("artifacts/govpn.aar")
@@ -34,7 +34,7 @@ afterEvaluate {
                     sign publishing.publications.govpn
                 }
                 pom {
-                    name = "me.proton:go-vpn-lib"
+                    name = "me.proton.vpn:go-vpn-lib"
                     description = "Go library with shared code for ProtonVPN clients"
                     url = "https://${githubRepo}"
                     licenses {
