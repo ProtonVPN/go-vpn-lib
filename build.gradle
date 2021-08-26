@@ -26,7 +26,6 @@ afterEvaluate {
                 version Helpers.getFullVersionName()
                 artifact("artifacts/govpn.aar")
                 artifact("artifacts/govpn-sources.jar") { classifier = "sources" }
-                artifact("govpn-javadoc.jar") { classifier = "javadoc" }
                 signing {
                     def signingKey = findProperty("signingKey")
                     def signingPassword = findProperty("signingPassword")
@@ -62,7 +61,7 @@ afterEvaluate {
             def sonatypeUser = System.getenv("SONATYPE_USER")
             if (sonatypeUser != null) {
                 maven {
-                    url "https://s01.oss.sonatype.org/service/local/"
+                    url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
                     credentials {
                         username sonatypeUser
                         password System.getenv("SONATYPE_PASSWORD")
