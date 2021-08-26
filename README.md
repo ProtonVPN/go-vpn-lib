@@ -157,3 +157,8 @@ and execute the build command pointing to the edited build config
 ```bash
 make build cfg=~/Projects/Proton/VPN/go-vpn-lib/build/apple.json
 ```
+
+### License
+The code and datafiles in this distribution are licensed under the terms of the GPLv3 as published by the Free Software Foundation. See https://www.gnu.org/licenses/ for a copy of this license.
+
+Copyright (c) 2021 Proton Technologies AG
