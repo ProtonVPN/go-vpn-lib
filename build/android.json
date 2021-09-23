@@ -10,14 +10,21 @@
   ],
   "build_name":"govpn",
   "build_tag": "v0.0.0+bd9454f3fa013fe4257a1d30b3c3cb015399839d+cf23cf884f6b689be85d87ebcf74c7ff7aee9c9d",
-  "java_pkg":"me.proton.vpn.golib",
+  "java_pkg":"com.proton.gopenpgp",
   "targets":["android"],
   "requirements": [
     {
-      "module":{
-        "path":"github.com/ProtonMail/go-srp",
-        "version": "bd9454f3fa013fe4257a1d30b3c3cb015399839d"
+      "module": {
+        "path": "github.com/ProtonMail/go-srp",
+        "version": "v0.0.2"
       }
+    },
+    {
+      "module":{
+        "path":"github.com/ProtonMail/gopenpgp/v2",
+        "version":"v2.2.4"
+      },
+      "packages": ["crypto", "armor", "constants", "models", "subtle", "helper"]
     },
     {
       "module": {
