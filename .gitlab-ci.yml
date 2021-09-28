@@ -64,9 +64,6 @@ publish android:
   script:
     - ./gradlew publish
     - ./gradlew publishSlack
-  artifacts:
-    paths:
-      - build/repo/*
 
 build iOS:
   stage: build
