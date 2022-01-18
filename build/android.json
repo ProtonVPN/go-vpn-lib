@@ -9,7 +9,6 @@
     "-ldflags=\"-s -w\""
   ],
   "build_name":"govpn",
-  "build_tag": "v0.0.0+bd9454f3fa013fe4257a1d30b3c3cb015399839d+cf23cf884f6b689be85d87ebcf74c7ff7aee9c9d",
   "java_pkg":"com.proton.gopenpgp",
   "targets":["android"],
   "requirements": [
@@ -40,15 +39,6 @@
         "path":"github.com/ProtonVPN/go-vpn-lib.git"
       },
       "local_path": "/builds/ProtonVPN/development/go-vpn-lib"
-    },
-    {
-      "old": {
-        "path":"github.com/jameskeane/bcrypt"
-      },
-      "new": {
-        "path":"github.com/ProtonMail/bcrypt",
-        "version": "v0.0.0-20210511135022-227b4adcab57"
-      }
     }
   ]
 }

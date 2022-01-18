@@ -9,7 +9,6 @@
         "-ldflags=\"-s -w\""
     ],
     "build_name":"WireguardSRP",
-    "build_tag": "2.1.5",
     "java_pkg":"com.proton.Crypto",
     "targets":["apple"],
     "requirements": [
@@ -35,15 +34,6 @@
                 "version": "v0.0.0"
             },
             "local_path":"../go-vpn-lib/"
-        },
-        {
-            "old": {
-                "path":"github.com/jameskeane/bcrypt"
-            },
-            "new": {
-                "path":"github.com/ProtonMail/bcrypt",
-                "version": "227b4adcab57223f6dd44a27c8ccac50c54090d9"
-            }
         }
     ]
 }
