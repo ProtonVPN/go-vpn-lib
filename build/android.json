@@ -1,6 +1,6 @@
 {
-  "go_version":"1.17.5",
-  "go_SHA256_checksum": "bd78114b0d441b029c8fe0341f4910370925a4d270a6a590668840675b0c653e",
+  "go_version":"1.17.6",
+  "go_SHA256_checksum": "231654bbf2dab3d86c1619ce799e77b03d96f9b50770297c8f4dff8836fc8ca2",
   "build_dir":"build",
   "out_dir":"out",
   "go_mobile_dir":"mobile",
@@ -22,7 +22,7 @@
     {
       "module":{
         "path":"github.com/ProtonMail/gopenpgp/v2",
-        "version":"v2.3.1"
+        "version":"v2.4.2"
       },
       "packages": ["crypto", "armor", "constants", "models", "subtle", "helper"]
     },
