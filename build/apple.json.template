@@ -16,7 +16,7 @@
             "module":
             {
                 "path":"github.com/ProtonMail/go-srp",
-                "version":"1e2c572b3e85fb6cc8509225a45d60478aed11e3"
+                "version":"v0.0.3"
             }
         },
         {
