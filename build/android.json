@@ -1,6 +1,6 @@
 {
-  "go_version":"1.17.6",
-  "go_SHA256_checksum": "231654bbf2dab3d86c1619ce799e77b03d96f9b50770297c8f4dff8836fc8ca2",
+  "go_version":"1.18.1",
+  "go_SHA256_checksum": "b3b815f47ababac13810fc6021eb73d65478e0b2db4b09d348eefad9581a2334",
   "build_dir":"build",
   "out_dir":"out",
   "go_mobile_dir":"mobile",
@@ -15,13 +15,13 @@
     {
       "module": {
         "path": "github.com/ProtonMail/go-srp",
-        "version": "v0.0.3"
+        "version": "v0.0.5"
       }
     },
     {
       "module":{
         "path":"github.com/ProtonMail/gopenpgp/v2",
-        "version":"v2.4.2"
+        "version":"v2.4.7"
       },
       "packages": ["crypto", "armor", "constants", "models", "subtle", "helper"]
     },
