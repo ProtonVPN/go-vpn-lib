@@ -116,6 +116,8 @@ type StatusMessage struct {
 	Features *Features `json:"features"`
 	Reason   *Reason   `json:"reason"`
 	SwitchTo string    `json:"please-switch-to"`
+	ClientIP string    `json:"client-device-ip"`
+	ServerIP string    `json:"client-server-ip"`
 }
 
 type Reason struct {
