@@ -21,7 +21,7 @@
     {
       "module":{
         "path":"github.com/ProtonMail/gopenpgp/v2",
-        "version":"v2.4.7"
+        "version":"v2.4.8"
       },
       "packages": ["crypto", "armor", "constants", "models", "subtle", "helper"]
     },
