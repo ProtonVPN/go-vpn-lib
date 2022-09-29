@@ -117,6 +117,9 @@ sync-app:
   only:
     refs:
       - master
+  before_script:
+    - !reference [ default, before_script ]
+    - apt update && apt-get install -y connect-proxy
   script:
     - scope="$(awk -F '@' '{print $2}' <<< "$CI_REPOSITORY_URL" | tr ':' '/')";
     - git clone "https://proton-ci:${PAT_PROTON_CI}@${scope}" --branch master _APP_CLONE;
