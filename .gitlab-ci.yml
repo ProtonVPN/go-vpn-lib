@@ -1,3 +1,7 @@
+default:
+  before_script:
+    - if [[ -f /load-env.sh ]]; then source /load-env.sh; fi
+
 variables:
   MODULES: ./localAgent ./ed25519 ./vpnPing
   ARTIFACTS_DIR: artifacts
@@ -17,9 +21,10 @@ test:
     - go test $MODULES
 
 build android:
-  image: gitlab.protontech.ch:4567/protonvpn/android/android-app-new:branch-development
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.0
   stage: build
   before_script:
+    - !reference [ default, before_script ]
     - export BUILD_CONFIG=`pwd`/build/android.json
     - export ARTIFACTS_PATH=`pwd`/$ARTIFACTS_DIR
     - apt-get update && apt-get install -y make jq wget tar;
@@ -33,6 +38,8 @@ build android:
     - export PATH="/usr/local/go/bin:$PATH";
     - go version
     - ls $ANDROID_NDK_HOME > /dev/null
+    - export ANDROID_HOME=$ANDROID_SDK_ROOT
+    - export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/23.1.7779620
     - export GOPRIVATE=gitlab.protontech.ch
     - git config --global url."git@gitlab.protontech.ch:".insteadOf "https://gitlab.protontech.ch/"
     - cd ..
@@ -53,7 +60,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: gitlab.protontech.ch:4567/protonvpn/android/android-app-new:branch-development
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.0
   tags:
     - small
   stage: publish
@@ -104,7 +111,7 @@ build iOS:
       - $ARTIFACTS_DIR/*
 
 sync-app:
-  image: gitlab.protontech.ch:4567/protonvpn/android/android-app-new:branch-development
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.0
   cache: {}
   stage: mirror
   only:
