@@ -22,6 +22,7 @@ type Event struct {
 	State     string
 	Code      int
 	Desc      string
+	ClientIP  string
 }
 
 func (c *WindowsClient) Log(log string) {
@@ -37,7 +38,7 @@ func (c *WindowsClient) OnError(code int, desc string) {
 }
 
 func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
-	c.eventChannel <- &Event{EventType: "status"}
+	c.eventChannel <- &Event{EventType: "status", ClientIP: status.ClientIP}
 }
 
 //export Connect
