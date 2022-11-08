@@ -112,17 +112,24 @@ func (feat *Features) diffTo(other *Features) *Features {
 }
 
 type StatusMessage struct {
-	State    string    `json:"state"`
-	Features *Features `json:"features"`
-	Reason   *Reason   `json:"reason"`
-	SwitchTo string    `json:"please-switch-to"`
-	ClientIP string    `json:"client-device-ip"`
+	State             string              `json:"state"`
+	Features          *Features           `json:"features"`
+	Reason            *Reason             `json:"reason"`
+	SwitchTo          string              `json:"please-switch-to"`
+	ConnectionDetails *ConnectionDetails  `json:"connection-details"`
 }
 
 type Reason struct {
 	Code        int    `json:"code"`
 	Final       bool   `json:"final"`
 	Description string `json:"description"`
+}
+
+type ConnectionDetails struct {
+	DeviceIp                string    `json:"device-ip"`
+	DeviceCountry           string    `json:"device-country"`
+	ServerIpv4              string    `json:"server-ipv4"`
+	ServerIpv6              string    `json:"server-ipv6"`
 }
 
 type GetMessage struct{}
