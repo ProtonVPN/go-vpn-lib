@@ -16,13 +16,20 @@ type WindowsClient struct {
 	eventChannel chan *Event
 }
 
+type ConnectionDetailsType struct {
+	DeviceIp        string
+	DeviceCountry   string
+	ServerIpv4      string
+	ServerIpv6      string
+}
+
 type Event struct {
-	EventType string
-	Log       string
-	State     string
-	Code      int
-	Desc      string
-	ClientIP  string
+	EventType           string
+	Log                 string
+	State               string
+	Code                int
+	Desc                string
+	ConnectionDetails   *ConnectionDetailsType
 }
 
 func (c *WindowsClient) Log(log string) {
@@ -38,7 +45,17 @@ func (c *WindowsClient) OnError(code int, desc string) {
 }
 
 func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
-	c.eventChannel <- &Event{EventType: "status", ClientIP: status.ClientIP}
+	var details *ConnectionDetailsType
+	if status.ConnectionDetails != nil {
+		details = &ConnectionDetailsType {
+			DeviceIp: status.ConnectionDetails.DeviceIp,
+			DeviceCountry: status.ConnectionDetails.DeviceCountry,
+			ServerIpv4: status.ConnectionDetails.ServerIpv4,
+			ServerIpv6: status.ConnectionDetails.ServerIpv6,
+		}
+	}
+
+	c.eventChannel <- &Event{EventType: "status", ConnectionDetails: details}
 }
 
 //export Connect
