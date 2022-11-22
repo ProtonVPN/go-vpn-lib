@@ -65,6 +65,9 @@ type Consts struct {
 	ErrorCodeUserTorrentNotAllowed     ErrorCode
 	ErrorCodeUserBadBehavior           ErrorCode
 
+	LabelPartner    string
+	FeatureBouncing string
+
 	// NOTE: initialize in var consts when adding new
 }
 
@@ -99,6 +102,9 @@ var consts = &Consts{
 	ErrorCodePolicyViolationDelinquent: 86152,
 	ErrorCodeUserTorrentNotAllowed:     86153,
 	ErrorCodeUserBadBehavior:           86154,
+
+	LabelPartner:    "partner",
+	FeatureBouncing: "bouncing",
 }
 
 // Constants export constants for the client
@@ -412,6 +418,12 @@ func (conn *AgentConnection) parseStatus(rawStatus json.RawMessage, socket *Mess
 		return err
 	}
 
+	if status.State == "hard-jailed" && status.Reason != nil && status.Reason.Code == consts.ErrorCodePolicyViolationLowPlan && conn.hasPartnerLabel() {
+		// Partner servers operate with jail, pretend everything's fine.
+		status.State = "connected"
+		status.Reason = nil
+	}
+
 	conn.Status = &status
 	switch status.State {
 	case "jailed":
@@ -443,4 +455,8 @@ func (conn *AgentConnection) parseError(rawError json.RawMessage) error {
 
 	conn.client.OnError(errorMsg.Code, errorMsg.Description)
 	return nil
+}
+
+func (conn *AgentConnection) hasPartnerLabel() bool {
+	return conn.requestedFeatures.GetString(consts.FeatureBouncing) == consts.LabelPartner
 }
