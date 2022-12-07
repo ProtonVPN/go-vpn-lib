@@ -68,6 +68,13 @@ type Consts struct {
 	LabelPartner    string
 	FeatureBouncing string
 
+	// Stats
+	StatsNetshieldLevelKey string
+	StatsMalwareKey        string
+	StatsAdsKey            string
+	StatsTrackerKey        string
+	StatsSavedBytesKey     string
+
 	// NOTE: initialize in var consts when adding new
 }
 
@@ -105,6 +112,12 @@ var consts = &Consts{
 
 	LabelPartner:    "partner",
 	FeatureBouncing: "bouncing",
+
+	StatsNetshieldLevelKey: "netshield-level",
+	StatsMalwareKey:        "DNSBL/1b",
+	StatsAdsKey:            "DNSBL/2a",
+	StatsTrackerKey:        "DNSBL/2b",
+	StatsSavedBytesKey:     "savedBytes",
 }
 
 // Constants export constants for the client
@@ -131,6 +144,7 @@ type AgentConnection struct {
 	updateConnectivity chan bool
 	client             NativeClient
 	updateFeatures     chan bool
+	getStatusRequests  chan bool
 	requestedFeatures  Features
 	featuresSent       bool
 }
@@ -140,6 +154,8 @@ type NativeClient interface {
 	OnState(state State)
 	OnError(code int, description string)
 	OnStatusUpdate(status *StatusMessage)
+	OnTlsSessionStarted()
+	OnTlsSessionEnded()
 }
 
 var initialBackoff = 250 * time.Millisecond
@@ -190,6 +206,7 @@ func newAgentConnection(
 	conn.closeChannel = make(chan bool, 1)
 	conn.client = client
 	conn.updateFeatures = make(chan bool, 1)
+	conn.getStatusRequests = make(chan bool, 1)
 	if features != nil {
 		conn.requestedFeatures = *features
 	} else {
@@ -226,8 +243,12 @@ func (conn *AgentConnection) cleanup() {
 	for len(conn.closeChannel) > 0 {
 		<-conn.closeChannel
 	}
+	for len(conn.getStatusRequests) > 0 {
+		<-conn.getStatusRequests
+	}
 	close(conn.updateConnectivity)
 	close(conn.updateFeatures)
+	close(conn.getStatusRequests)
 }
 
 func (conn *AgentConnection) SetFeatures(features *Features) {
@@ -235,6 +256,14 @@ func (conn *AgentConnection) SetFeatures(features *Features) {
 	go func() {
 		if !conn.closed {
 			conn.updateFeatures <- true
+		}
+	}()
+}
+
+func (conn *AgentConnection) SendGetStatus(withStatistics bool) {
+	go func() {
+		if !conn.closed {
+			conn.getStatusRequests <- withStatistics
 		}
 	}()
 }
@@ -346,10 +375,13 @@ func (conn *AgentConnection) tlsConnectionLoop(
 		conn.client.Log("LocalAgent: established tls connection")
 		defer func() { socket.close <- true }()
 
+		conn.client.OnTlsSessionStarted()
 		for err == nil && !conn.closed && conn.connectivity {
 			select {
 			case <-conn.updateFeatures:
 				conn.sendFeaturesDiff(socket)
+			case withStatistics := <-conn.getStatusRequests:
+				conn.sendGetStatus(socket, withStatistics)
 			case msg := <-socket.recv:
 				err = conn.parse(msg, socket)
 			case <-conn.updateConnectivity:
@@ -364,6 +396,7 @@ func (conn *AgentConnection) tlsConnectionLoop(
 				break
 			}
 		}
+		conn.client.OnTlsSessionEnded()
 	}
 	return err
 }
@@ -376,6 +409,10 @@ func (conn *AgentConnection) sendFeaturesDiff(socket *MessageSocket) {
 			socket.send <- createMessage("features-set", diff)
 		}
 	}
+}
+
+func (conn *AgentConnection) sendGetStatus(socket *MessageSocket, withStatistics bool) {
+	socket.send <- createMessage("status-get", GetStatusMessage{FeaturesStatistics: withStatistics})
 }
 
 func (conn *AgentConnection) invalidateFeatures(diff *Features) {
@@ -433,6 +470,7 @@ func (conn *AgentConnection) parseStatus(rawStatus json.RawMessage, socket *Mess
 	case "connected":
 		conn.setState(consts.StateConnected)
 	}
+	status.processStats()
 	conn.client.OnStatusUpdate(&status)
 	if conn.Status.Reason != nil {
 		conn.client.OnError(conn.Status.Reason.Code, conn.Status.Reason.Description)

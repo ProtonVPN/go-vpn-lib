@@ -116,6 +116,8 @@ func (client mockNativeClient) OnError(code int, description string) {
 }
 
 func (client mockNativeClient) OnStatusUpdate(status *StatusMessage) {}
+func (client mockNativeClient) OnTlsSessionStarted()                 {}
+func (client mockNativeClient) OnTlsSessionEnded()                   {}
 
 func createTestConnection(client mockNativeClient, features *Features, socketFactory messageSocketFactory) *AgentConnection {
 	agent, _ := newAgentConnection(testCert, testKey, "", "localhost", "localhost",

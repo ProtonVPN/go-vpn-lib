@@ -27,6 +27,37 @@ import (
 
 var testFeatures = createTestFeatures()
 
+var statusNetshieldStatsJson = `{
+        "state": "connected",
+        "features": {
+            "bouncing": "0",
+            "randomized-nat": false,
+            "split-tcp": true,
+            "netshield-level": 2
+        },
+        "features-statistics": {
+            "netshield-level": {
+                "DNSBL/1b": 1,
+                "DNSBL/2a": 2
+            }
+        }
+    }`
+
+var statusUnknownStatsJson = `{
+		"state": "connected",
+		"features": {
+			"bouncing": "0",
+			"randomized-nat": false,
+			"split-tcp": true,
+			"netshield-level": 2
+		},
+		"features-statistics": {
+			"unknown-group": {
+				"a": 1
+			}
+		}
+	}`
+
 func createTestFeatures() *Features {
 	var feat = NewFeatures()
 	feat.SetInt("int", 2)
@@ -46,8 +77,8 @@ func TestFeatures(t *testing.T) {
 
 	assert.Equal(4, unmarshalled.GetKeys().GetCount())
 	assert.Equal(toSet([]string{"int", "int2", "bool", "string"}), toSet(unmarshalled.GetKeys().values))
-	assert.Equal(2, unmarshalled.GetInt("int"))
-	assert.Equal(3, unmarshalled.GetInt("int2"))
+	assert.Equal(int64(2), unmarshalled.GetInt("int"))
+	assert.Equal(int64(3), unmarshalled.GetInt("int2"))
 	assert.Equal(true, unmarshalled.GetBool("bool"))
 	assert.Equal("1", unmarshalled.GetString("string"))
 	assert.True(unmarshalled.HasKey("string"))
@@ -66,4 +97,25 @@ func toSet(values []string) map[string]bool {
 		result[v] = true
 	}
 	return result
+}
+
+func TestNetshieldStatsParsingAndProcessing(t *testing.T) {
+	assert := assert.New(t)
+	var status StatusMessage
+	err := json.Unmarshal([]byte(statusNetshieldStatsJson), &status)
+	assert.Equal(nil, err)
+	status.processStats()
+	var stats = status.FeaturesStatistics.GetMap(consts.StatsNetshieldLevelKey)
+	var savedKB = stats.GetInt(consts.StatsSavedBytesKey)
+	assert.Equal(avgMalwareSizeBytes + 2 * avgAdSizeBytes, savedKB)
+}
+
+func TestUnknownStats(t *testing.T) {
+	assert := assert.New(t)
+	var status StatusMessage
+	err := json.Unmarshal([]byte(statusUnknownStatsJson), &status)
+	assert.Equal(nil, err)
+	status.processStats()
+	var unknownStat = status.FeaturesStatistics.GetMap("unknown-group").GetInt("a")
+	assert.Equal(int64(1), unknownStat)
 }
