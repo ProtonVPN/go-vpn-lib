@@ -64,7 +64,6 @@ publish android:
   tags:
     - small
   stage: publish
-  when: manual
   only:
     refs:
       - master
