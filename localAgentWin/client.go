@@ -58,6 +58,12 @@ func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
 	c.eventChannel <- &Event{EventType: "status", ConnectionDetails: details}
 }
 
+func (c *WindowsClient) OnTlsSessionStarted() {
+}
+
+func (c *WindowsClient) OnTlsSessionEnded() {
+}
+
 //export Connect
 func Connect(
 	clientCertPEM,
