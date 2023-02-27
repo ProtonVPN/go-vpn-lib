@@ -116,6 +116,11 @@ func GetStatus() []byte {
 	return []byte(string(result))
 }
 
+//export SendGetStatus
+func SendGetStatus(withStatistics bool) {
+	currentConnection.SendGetStatus(withStatistics)
+}
+
 //export SetFeatures
 func SetFeatures(featuresJson string) {
 	features := new(localAgent.Features)
