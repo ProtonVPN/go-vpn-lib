@@ -30,6 +30,7 @@ type Event struct {
 	Code                int
 	Desc                string
 	ConnectionDetails   *ConnectionDetailsType
+	FeaturesStatistics	string
 }
 
 func (c *WindowsClient) Log(log string) {
@@ -45,9 +46,9 @@ func (c *WindowsClient) OnError(code int, desc string) {
 }
 
 func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
-	var details *ConnectionDetailsType
+	var connectionDetails *ConnectionDetailsType
 	if status.ConnectionDetails != nil {
-		details = &ConnectionDetailsType {
+		connectionDetails = &ConnectionDetailsType {
 			DeviceIp: status.ConnectionDetails.DeviceIp,
 			DeviceCountry: status.ConnectionDetails.DeviceCountry,
 			ServerIpv4: status.ConnectionDetails.ServerIpv4,
@@ -55,7 +56,15 @@ func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
 		}
 	}
 
-	c.eventChannel <- &Event{EventType: "status", ConnectionDetails: details}
+	c.eventChannel <- &Event{EventType: "status", ConnectionDetails: connectionDetails}
+
+	var featuresStatistics []byte
+	if status.FeaturesStatistics != nil {
+		featuresStatistics, _ = status.FeaturesStatistics.MarshalJSON()
+	}
+	if featuresStatistics != nil {
+		c.eventChannel <- &Event{EventType: "stats", FeaturesStatistics: string(featuresStatistics)}
+	}
 }
 
 func (c *WindowsClient) OnTlsSessionStarted() {
