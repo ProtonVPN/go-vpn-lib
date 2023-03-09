@@ -23,6 +23,8 @@ test:
 build android:
   image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.0
   stage: build
+  tags:
+    - medium
   before_script:
     - !reference [ default, before_script ]
     - export BUILD_CONFIG=`pwd`/build/android.json
