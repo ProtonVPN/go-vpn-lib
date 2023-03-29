@@ -21,7 +21,7 @@ test:
     - go test $MODULES
 
 build android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.3
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
   stage: build
   tags:
     - medium
@@ -62,7 +62,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.3
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
   tags:
     - small
   stage: publish
@@ -112,7 +112,7 @@ build iOS:
       - $ARTIFACTS_DIR/*
 
 sync-app:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.3
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
   cache: {}
   stage: mirror
   only:
