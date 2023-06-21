@@ -1,6 +1,6 @@
 {
-  "go_version":"1.18.1",
-  "go_SHA256_checksum": "b3b815f47ababac13810fc6021eb73d65478e0b2db4b09d348eefad9581a2334",
+  "go_version":"1.20.3",
+  "go_SHA256_checksum": "979694c2c25c735755bf26f4f45e19e64e4811d661dd07b8c010f7a8e18adfca",
   "build_dir":"build",
   "out_dir":"out",
   "go_mobile_dir":"mobile",
