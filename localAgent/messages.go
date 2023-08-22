@@ -91,7 +91,7 @@ func (feat *StringToValueMap) GetIntOrDefault(name string, defautVal int64) int6
 	if v, ok := feat.fields[name]; ok {
 		return int64(v.(float64))
 	}
-	return 0
+	return defautVal
 }
 
 func (feat *StringToValueMap) SetString(name string, value string) {
@@ -100,6 +100,13 @@ func (feat *StringToValueMap) SetString(name string, value string) {
 
 func (feat *StringToValueMap) GetString(name string) string {
 	return feat.fields[name].(string)
+}
+
+func (feat *StringToValueMap) GetStringOrDefault(name string, defaultVal string) string {
+	if v, ok := feat.fields[name]; ok {
+		return v.(string)
+	}
+	return defaultVal
 }
 
 func (feat *StringToValueMap) SetBool(name string, value bool) {
