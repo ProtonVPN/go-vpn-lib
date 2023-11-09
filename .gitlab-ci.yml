@@ -1,6 +1,8 @@
 default:
   before_script:
     - if [[ -f /load-env.sh ]]; then source /load-env.sh; fi
+  tags:
+    - shared-small
 
 variables:
   MODULES: ./localAgent ./ed25519 ./vpnPing
@@ -15,16 +17,14 @@ stages:
 test:
   image: $CI_REGISTRY/infra/kubernetes/images/golang:latest
   stage: test
-  tags:
-    - small
   script:
     - go test $MODULES
 
 build android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
+  image: ${CI_REGISTRY}/android/shared/docker-android/oci-ndk:v2.0.0
   stage: build
   tags:
-    - medium
+    - shared-medium
   before_script:
     - !reference [ default, before_script ]
     - export BUILD_CONFIG=`pwd`/build/android.json
@@ -62,9 +62,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
-  tags:
-    - small
+  image: ${CI_REGISTRY}/android/shared/docker-android/oci:v2.0.0
   stage: publish
   only:
     refs:
@@ -112,7 +110,7 @@ build iOS:
       - $ARTIFACTS_DIR/*
 
 sync-app:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
+  image: ${CI_REGISTRY}/android/shared/docker-android/oci:v2.0.0
   cache: {}
   stage: mirror
   only:
