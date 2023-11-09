@@ -62,7 +62,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/oci:v2.0.0
+  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
   stage: publish
   only:
     refs:
