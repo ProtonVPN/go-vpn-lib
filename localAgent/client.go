@@ -176,9 +176,20 @@ func NewAgentConnection(
 	client NativeClient,
 	features *Features,
 	connectivity bool,
+	keepAliveSeconds int, // 0 sets Go defaults
+	keepAliveMaxCount int, // 0 sets Go defaults
 ) (*AgentConnection, error) {
+	socketFactory := func(
+		clientCert tls.Certificate,
+		serverCAsPEM string,
+		host string,
+		certServerName string,
+		log func(string),
+	) (*MessageSocket, error) {
+		return openSocket(clientCert, serverCAsPEM, host, certServerName, keepAliveSeconds, keepAliveMaxCount, log)
+	}
 	return newAgentConnection(clientCertPEM, clientKeyPEM, serverCAsPEM, host, certServerName, client, features,
-		connectivity, openSocket)
+		connectivity, socketFactory)
 }
 
 func newAgentConnection(

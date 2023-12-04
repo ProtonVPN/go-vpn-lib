@@ -91,6 +91,8 @@ func openSocket(
 	serverCAsPEM string,
 	host string,
 	certServerName string,
+	keepAliveSeconds int,
+	keepAliveMaxCount int,
 	log func(string),
 ) (*MessageSocket, error) {
 	serverCAs := x509.NewCertPool()
@@ -103,9 +105,15 @@ func openSocket(
 		MinVersion:   tls.VersionTLS12,
 	}
 
+	keepaliveConfig := net.KeepAliveConfig{
+		Enable: true,
+		Idle: time.Duration(keepAliveSeconds) * time.Second,
+		Interval: time.Duration(keepAliveSeconds) * time.Second,
+		Count: keepAliveMaxCount,
+	}
 	dialer := net.Dialer{
-		Timeout:   5 * time.Second,
-		KeepAlive: 1 * time.Minute,
+		Timeout:         5 * time.Second,
+		KeepAliveConfig: keepaliveConfig,
 	}
 
 	tlsConn, err := tls.DialWithDialer(&dialer, "tcp", host, tlsConf)
