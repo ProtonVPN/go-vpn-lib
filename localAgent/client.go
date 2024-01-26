@@ -46,6 +46,7 @@ type Consts struct {
 	StateDisconnected                  State
 
 	// Error codes
+	ErrorCodeUnknown                   ErrorCode
 	ErrorCodeGuestSession              ErrorCode
 	ErrorCodeRestrictedServer          ErrorCode
 	ErrorCodeBadCertSignature          ErrorCode
@@ -91,6 +92,7 @@ var consts = &Consts{
 	StateClientCertificateUnknownCA:    "ClientCertificateUnknownCA",
 	StateDisconnected:                  "Disconnected",
 
+	ErrorCodeUnknown:                   0,
 	ErrorCodeGuestSession:              86100,
 	ErrorCodeRestrictedServer:          86104,
 	ErrorCodeBadCertSignature:          86105,
@@ -474,6 +476,8 @@ func (conn *AgentConnection) parseStatus(rawStatus json.RawMessage, socket *Mess
 	conn.client.OnStatusUpdate(&status)
 	if conn.Status.Reason != nil {
 		conn.client.OnError(conn.Status.Reason.Code, conn.Status.Reason.Description)
+	} else if status.State == "hard-jailed" {
+		conn.client.OnError(consts.ErrorCodeUnknown, "")
 	}
 
 	if !conn.featuresSent {
