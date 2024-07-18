@@ -21,7 +21,7 @@ test:
     - go test $MODULES
 
 build android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/oci-ndk:v2.0.0
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.1
   stage: build
   tags:
     - shared-medium
@@ -62,7 +62,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: ${CI_REGISTRY}/android/shared/docker-android/ndk:v1.0.4
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.1
   stage: publish
   only:
     refs:
@@ -110,7 +110,7 @@ build iOS:
       - $ARTIFACTS_DIR/*
 
 sync-app:
-  image: ${CI_REGISTRY}/android/shared/docker-android/oci:v2.0.0
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci:v2.1.1
   cache: {}
   stage: mirror
   only:
@@ -120,8 +120,7 @@ sync-app:
     - !reference [ default, before_script ]
     - apt update && apt-get install -y connect-proxy
   script:
-    - scope="$(awk -F '@' '{print $2}' <<< "$CI_REPOSITORY_URL" | tr ':' '/')";
-    - git clone "https://proton-ci:${PAT_PROTON_CI}@${scope}" --branch master _APP_CLONE;
+    - git clone "$OAUTH_SELF_URL" --branch master _APP_CLONE;
     - cd _APP_CLONE
     - git remote add public $PUBLIC_REPO_URL
     - git push public master -f
