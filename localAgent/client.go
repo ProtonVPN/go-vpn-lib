@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync/atomic"
 	"time"
 )
 
@@ -140,7 +141,7 @@ type AgentConnection struct {
 	Status *StatusMessage
 
 	// private
-	closed             bool
+	closed             atomic.Bool
 	closeChannel       chan bool
 	connectivity       bool
 	updateConnectivity chan bool
@@ -202,7 +203,7 @@ func newAgentConnection(
 		return nil, err
 	}
 	conn := new(AgentConnection)
-	conn.closed = false
+	conn.closed.Store(false)
 	conn.connectivity = connectivity
 	conn.updateConnectivity = make(chan bool, 1)
 	conn.closeChannel = make(chan bool, 1)
@@ -220,9 +221,9 @@ func newAgentConnection(
 }
 
 func (conn *AgentConnection) Close() {
-	if !conn.closed {
+	if !conn.closed.Load() {
 		conn.client.Log("LocalAgent: closing")
-		conn.closed = true
+		conn.closed.Store(true)
 		conn.setState(consts.StateDisconnected)
 		go func() {
 			conn.closeChannel <- true
@@ -256,7 +257,7 @@ func (conn *AgentConnection) cleanup() {
 func (conn *AgentConnection) SetFeatures(features *Features) {
 	conn.requestedFeatures.update(features)
 	go func() {
-		if !conn.closed {
+		if !conn.closed.Load() {
 			conn.updateFeatures <- true
 		}
 	}()
@@ -264,7 +265,7 @@ func (conn *AgentConnection) SetFeatures(features *Features) {
 
 func (conn *AgentConnection) SendGetStatus(withStatistics bool) {
 	go func() {
-		if !conn.closed {
+		if !conn.closed.Load() {
 			conn.getStatusRequests <- withStatistics
 		}
 	}()
@@ -278,7 +279,7 @@ func (conn *AgentConnection) setState(state State) {
 func (conn *AgentConnection) SetConnectivity(available bool) {
 	go func() {
 		conn.connectivity = available
-		if !conn.closed {
+		if !conn.closed.Load() {
 			conn.updateConnectivity <- available
 		}
 	}()
@@ -293,10 +294,10 @@ func (conn *AgentConnection) connectionLoop(
 	socketFactory messageSocketFactory,
 ) {
 	nextBackoff := initialBackoff
-	for !conn.closed {
+	for !conn.closed.Load() {
 		start := time.Now().Unix()
 
-		for !conn.connectivity && !conn.closed {
+		for !conn.connectivity && !conn.closed.Load() {
 			conn.client.Log("LocalAgent waiting for connectivity...")
 			conn.setState(consts.StateWaitingForNetwork)
 			select {
@@ -306,9 +307,9 @@ func (conn *AgentConnection) connectionLoop(
 			}
 		}
 
-		if !conn.closed {
+		if !conn.closed.Load() {
 			err := conn.tlsConnectionLoop(cert, serverCAsPEM, host, certServerName, socketFactory)
-			if !conn.closed {
+			if !conn.closed.Load() {
 				if err != nil {
 					conn.client.Log("LocalAgent connection error: (" + fmt.Sprintf("%T", err) + ") " + err.Error())
 					switch translateError(err) {
@@ -328,7 +329,7 @@ func (conn *AgentConnection) connectionLoop(
 						}
 					}
 				}
-				if !conn.closed {
+				if !conn.closed.Load() {
 					connectionTime := time.Duration(time.Now().Unix()-start) * time.Second
 					// long connection reduces next backoff
 					nextBackoff = minDuration(nextBackoff, maxBackoff-connectionTime)
@@ -373,12 +374,12 @@ func (conn *AgentConnection) tlsConnectionLoop(
 		<-conn.updateFeatures
 	}
 	conn.featuresSent = false
-	if !conn.closed && err == nil {
+	if !conn.closed.Load() && err == nil {
 		conn.client.Log("LocalAgent: established tls connection")
 		defer func() { socket.close <- true }()
 
 		conn.client.OnTlsSessionStarted()
-		for err == nil && !conn.closed && conn.connectivity {
+		for err == nil && !conn.closed.Load() && conn.connectivity {
 			select {
 			case <-conn.updateFeatures:
 				conn.sendFeaturesDiff(socket)
