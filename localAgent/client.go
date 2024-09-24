@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -142,7 +143,8 @@ type AgentConnection struct {
 
 	// private
 	closed             atomic.Bool
-	closeChannel       chan bool
+	closeChannel       chan struct{}
+	cleanupWg          sync.WaitGroup
 	connectivity       bool
 	updateConnectivity chan bool
 	client             NativeClient
@@ -206,7 +208,7 @@ func newAgentConnection(
 	conn.closed.Store(false)
 	conn.connectivity = connectivity
 	conn.updateConnectivity = make(chan bool, 1)
-	conn.closeChannel = make(chan bool, 1)
+	conn.closeChannel = make(chan struct{})
 	conn.client = client
 	conn.updateFeatures = make(chan bool, 1)
 	conn.getStatusRequests = make(chan bool, 1)
@@ -225,9 +227,7 @@ func (conn *AgentConnection) Close() {
 		conn.client.Log("LocalAgent: closing")
 		conn.closed.Store(true)
 		conn.setState(consts.StateDisconnected)
-		go func() {
-			conn.closeChannel <- true
-		}()
+		close(conn.closeChannel)
 	}
 }
 
@@ -237,18 +237,8 @@ func (conn *AgentConnection) terminalState(state State) {
 }
 
 func (conn *AgentConnection) cleanup() {
-	for len(conn.updateConnectivity) > 0 {
-		<-conn.updateConnectivity
-	}
-	for len(conn.updateFeatures) > 0 {
-		<-conn.updateFeatures
-	}
-	for len(conn.closeChannel) > 0 {
-		<-conn.closeChannel
-	}
-	for len(conn.getStatusRequests) > 0 {
-		<-conn.getStatusRequests
-	}
+	<-conn.closeChannel
+	conn.cleanupWg.Wait()
 	close(conn.updateConnectivity)
 	close(conn.updateFeatures)
 	close(conn.getStatusRequests)
@@ -256,17 +246,23 @@ func (conn *AgentConnection) cleanup() {
 
 func (conn *AgentConnection) SetFeatures(features *Features) {
 	conn.requestedFeatures.update(features)
+	conn.cleanupWg.Add(1)
 	go func() {
-		if !conn.closed.Load() {
-			conn.updateFeatures <- true
+		defer conn.cleanupWg.Done()
+		select {
+		case conn.updateFeatures <- true:
+		case <-conn.closeChannel:
 		}
 	}()
 }
 
 func (conn *AgentConnection) SendGetStatus(withStatistics bool) {
+	conn.cleanupWg.Add(1)
 	go func() {
-		if !conn.closed.Load() {
-			conn.getStatusRequests <- withStatistics
+		defer conn.cleanupWg.Done()
+		select {
+		case conn.getStatusRequests <- withStatistics:
+		case <-conn.closeChannel:
 		}
 	}()
 }
@@ -277,10 +273,13 @@ func (conn *AgentConnection) setState(state State) {
 }
 
 func (conn *AgentConnection) SetConnectivity(available bool) {
+	conn.cleanupWg.Add(1)
 	go func() {
+		defer conn.cleanupWg.Done()
 		conn.connectivity = available
-		if !conn.closed.Load() {
-			conn.updateConnectivity <- available
+		select {
+		case conn.updateConnectivity <- available:
+		case <-conn.closeChannel:
 		}
 	}()
 }
@@ -376,7 +375,7 @@ func (conn *AgentConnection) tlsConnectionLoop(
 	conn.featuresSent = false
 	if !conn.closed.Load() && err == nil {
 		conn.client.Log("LocalAgent: established tls connection")
-		defer func() { socket.close <- true }()
+		defer func() { socket.close <- true }() // TODO(msimonides): Shouldn't this be in front of conn.closed.Load check?
 
 		conn.client.OnTlsSessionStarted()
 		for err == nil && !conn.closed.Load() && conn.connectivity {
