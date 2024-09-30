@@ -373,32 +373,34 @@ func (conn *AgentConnection) tlsConnectionLoop(
 		<-conn.updateFeatures
 	}
 	conn.featuresSent = false
-	if !conn.closed.Load() && err == nil {
-		conn.client.Log("LocalAgent: established tls connection")
-		defer func() { socket.close <- true }() // TODO(msimonides): Shouldn't this be in front of conn.closed.Load check?
+	if err == nil {
+		defer func() { socket.close <- true }()
+		if !conn.closed.Load() {
+			conn.client.Log("LocalAgent: established tls connection")
 
-		conn.client.OnTlsSessionStarted()
-		for err == nil && !conn.closed.Load() && conn.connectivity {
-			select {
-			case <-conn.updateFeatures:
-				conn.sendFeaturesDiff(socket)
-			case withStatistics := <-conn.getStatusRequests:
-				conn.sendGetStatus(socket, withStatistics)
-			case msg := <-socket.recv:
-				err = conn.parse(msg, socket)
-			case <-conn.updateConnectivity:
-				{
-					if !conn.connectivity {
-						break
+			conn.client.OnTlsSessionStarted()
+			for err == nil && !conn.closed.Load() && conn.connectivity {
+				select {
+				case <-conn.updateFeatures:
+					conn.sendFeaturesDiff(socket)
+				case withStatistics := <-conn.getStatusRequests:
+					conn.sendGetStatus(socket, withStatistics)
+				case msg := <-socket.recv:
+					err = conn.parse(msg, socket)
+				case <-conn.updateConnectivity:
+					{
+						if !conn.connectivity {
+							break
+						}
 					}
+				case err = <-socket.recvErr:
+				case err = <-socket.sendErr:
+				case <-conn.closeChannel:
+					break
 				}
-			case err = <-socket.recvErr:
-			case err = <-socket.sendErr:
-			case <-conn.closeChannel:
-				break
 			}
+			conn.client.OnTlsSessionEnded()
 		}
-		conn.client.OnTlsSessionEnded()
 	}
 	return err
 }
