@@ -223,9 +223,8 @@ func newAgentConnection(
 }
 
 func (conn *AgentConnection) Close() {
-	if !conn.closed.Load() {
+	if conn.closed.CompareAndSwap(false, true) {
 		conn.client.Log("LocalAgent: closing")
-		conn.closed.Store(true)
 		conn.setState(consts.StateDisconnected)
 		close(conn.closeChannel)
 	}
