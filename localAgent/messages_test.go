@@ -40,7 +40,8 @@ var statusNetshieldStatsJson = `{
                 "DNSBL/1b": 1,
                 "DNSBL/2a": 2
             }
-        }
+        },
+        "restrictions": ["bittorrent"]
     }`
 
 var statusUnknownStatsJson = `{
@@ -83,6 +84,17 @@ func TestFeatures(t *testing.T) {
 	assert.Equal("1", unmarshalled.GetString("string"))
 	assert.True(unmarshalled.HasKey("string"))
 	assert.False(unmarshalled.HasKey("unknown"))
+}
+
+func TestRestrictions(t *testing.T) {
+    assert := assert.New(t)
+
+    var status StatusMessage
+    err := json.Unmarshal([]byte(statusNetshieldStatsJson), &status)
+    assert.Equal(nil, err)
+    assert.True(status.Restrictions != nil)
+    assert.Equal("bittorrent", status.Restrictions.Get(0))
+    assert.Equal(1, status.Restrictions.GetCount())
 }
 
 func Test_CreateMessage(t *testing.T) {

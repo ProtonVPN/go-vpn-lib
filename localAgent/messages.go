@@ -64,6 +64,19 @@ func (feat *StringToValueMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(feat.fields)
 }
 
+func (array *StringArray) UnmarshalJSON(data []byte) error {
+	var values []string
+	if err := json.Unmarshal(data, &values); err != nil {
+		return err
+	}
+	array.values = values
+	return nil
+}
+
+func (array *StringArray) MarshalJSON() ([]byte, error) {
+	return json.Marshal(array.values)
+}
+
 func (feat *StringToValueMap) HasKey(name string) bool {
 	feat.RLock()
 	defer feat.RUnlock()
@@ -186,6 +199,7 @@ type StatusMessage struct {
 	SwitchTo           string             `json:"please-switch-to"`
 	ConnectionDetails  *ConnectionDetails `json:"connection-details"`
 	FeaturesStatistics *StringToValueMap  `json:"features-statistics"`
+	Restrictions       *StringArray       `json:"restrictions"`
 }
 
 func (status *StatusMessage) processStats() {
