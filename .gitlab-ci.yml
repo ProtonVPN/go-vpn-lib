@@ -14,6 +14,11 @@ stages:
   - mirror
   - publish
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 test:
   image: $CI_REGISTRY/infra/kubernetes/images/golang:latest
   stage: test
