@@ -7,6 +7,7 @@ default:
 variables:
   MODULES: ./localAgent ./ed25519 ./vpnPing
   ARTIFACTS_DIR: artifacts
+  GIT_FETCH_DEFAULT_BRANCH: "yes" # For gitleaks scan.
 
 stages:
   - test
@@ -18,6 +19,9 @@ workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+include:
+  - component: gitlab.protontech.ch/proton/devops/cicd-components/kits/devsecops/go@0.0.33
 
 test:
   image: $CI_REGISTRY/infra/kubernetes/images/golang:latest
