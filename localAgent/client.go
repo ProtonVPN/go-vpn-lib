@@ -332,7 +332,7 @@ func (conn *AgentConnection) connectionLoop(
 					// long connection reduces next backoff
 					nextBackoff = minDuration(nextBackoff, maxBackoff-connectionTime)
 					nextBackoff = maxDuration(initialBackoff, nextBackoff)
-					nextBackoff += multiplyDuration(nextBackoff, 0.2*rand.Float64()) // random 0-20% increase
+					nextBackoff += multiplyDuration(nextBackoff, 0.2*rand.Float64()) // #nosec G404 random 0-20% increase
 
 					if conn.connectivity {
 						conn.client.Log(fmt.Sprint("Local agent retry in ", nextBackoff.Seconds(), "s"))

@@ -46,11 +46,14 @@ func PingSyncWithError(ip string, port int, serverKeyBase64 string, timeoutMilli
 	}
 
 	// Encode in little endian the current unix timestamp. This would work until 2038.
-	timestamp := uint32(time.Now().Unix())
+	timestamp := uint32(time.Now().Unix()) // #nosec G115 (overflow in conversion)
 
 	msg := new(bytes.Buffer)
 	msg.Write(key)
-	binary.Write(msg, binary.LittleEndian, timestamp)
+	err = binary.Write(msg, binary.LittleEndian, timestamp)
+	if err != nil {
+		return false, err
+	}
 
 	hmac := hmac.New(sha256.New, []byte("lci6UYRryo5rcQVpxfJ0fCs6UBY5eGyV"))
 	hmac.Write(msg.Bytes())
@@ -58,7 +61,10 @@ func PingSyncWithError(ip string, port int, serverKeyBase64 string, timeoutMilli
 	data := new(bytes.Buffer)
 	// FE is an invalid opcode for both OpenVPN and Wireguard, 01 is the version of the ping
 	data.Write([]byte{0xfe, 0x01})
-	binary.Write(data, binary.LittleEndian, timestamp)
+	err = binary.Write(data, binary.LittleEndian, timestamp)
+	if err != nil {
+		return false, err
+	}
 	data.Write(hmac.Sum(nil))
 
 	address := fmt.Sprint(ip, ":", port)

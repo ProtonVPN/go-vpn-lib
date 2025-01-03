@@ -53,7 +53,7 @@ func newMessageSocket(
 	go func() {
 		<-socket.close
 		socket.closed = true
-		closeSocket(socket)
+		closeSocket(socket) // #nosec G104 (ignore error)
 		close(socket.send)
 	}()
 
@@ -100,6 +100,7 @@ func openSocket(
 		Certificates: []tls.Certificate{clientCert},
 		RootCAs:      serverCAs,
 		ServerName:   certServerName,
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	dialer := net.Dialer{
@@ -136,7 +137,7 @@ func openSocket(
 
 func (socket *MessageSocket) Send(writer *bufio.Writer, msg string, log func(string)) error {
 	log("LocalAgent sending: " + msg)
-	msgLen := uint32(len(msg))
+	msgLen := uint32(len(msg)) // #nosec G115 - it's unlikely to be negative, so the conversion is safe.
 
 	err := binary.Write(writer, binary.BigEndian, msgLen)
 	if err == nil && !socket.closed {
