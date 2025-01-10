@@ -34,7 +34,7 @@ var testCert = "-----BEGIN CERTIFICATE-----\nMIIBHjCB0QIUTM7tBq1mnKSLlwuWugFy1uF
 
 var testLogs []string
 var testErrors []ErrorMessage
-var testStates []State
+var testStates []string
 
 var jailedStatusResponse = `{
     "status": {
@@ -107,7 +107,7 @@ func (client mockNativeClient) Log(text string) {
 	testLogs = append(testLogs, text)
 }
 
-func (client mockNativeClient) OnState(state State) {
+func (client mockNativeClient) OnState(state string) {
 	testStates = append(testStates, state)
 }
 
@@ -159,7 +159,7 @@ func setup() {
 	mockSocket = newMockSocket()
 	testLogs = []string{}
 	testErrors = []ErrorMessage{}
-	testStates = []State{}
+	testStates = []string{}
 	mockClient = mockNativeClient{}
 }
 
@@ -186,7 +186,7 @@ func TestAgentConnection_ConnectAndUnjail(t *testing.T) {
 	assert.Equal(0, len(mockSocket.sendResults))
 
 	assert.Equal("connected", conn.Status.State)
-	assert.Equal([]State{consts.StateConnecting, consts.StateSoftJailed, consts.StateConnected}, testStates)
+	assert.Equal([]string{consts.StateConnecting, consts.StateSoftJailed, consts.StateConnected}, testStates)
 	assert.Equal(0, len(testErrors))
 }
 
@@ -198,7 +198,7 @@ func TestAgentConnection_ConnectionError(t *testing.T) {
 
 	time.Sleep(2 * time.Millisecond)
 
-	assert.Equal([]State{consts.StateConnecting, consts.StateServerUnreachable}, testStates)
+	assert.Equal([]string{consts.StateConnecting, consts.StateServerUnreachable}, testStates)
 }
 
 func TestAgentConnection_ReceiveError(t *testing.T) {
@@ -211,5 +211,5 @@ func TestAgentConnection_ReceiveError(t *testing.T) {
 
 	time.Sleep(2 * time.Millisecond)
 
-	assert.Equal([]State{consts.StateConnecting, consts.StateConnectionError}, testStates)
+	assert.Equal([]string{consts.StateConnecting, consts.StateConnectionError}, testStates)
 }

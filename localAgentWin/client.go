@@ -3,9 +3,9 @@ package main
 import (
 	"C"
 	"encoding/json"
+	"go-vpn-lib/localAgent"
+	"go-vpn-lib/vpnPing"
 	"strings"
-	"../localAgent"
-	"../vpnPing"
 )
 
 var currentConnection *localAgent.AgentConnection

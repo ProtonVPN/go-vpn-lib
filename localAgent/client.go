@@ -30,43 +30,42 @@ import (
 	"time"
 )
 
-type State = string
 type ErrorCode = int
 
 type Consts struct {
 	// States
-	StateConnecting                    State
-	StateConnected                     State
-	StateSoftJailed                    State
-	StateHardJailed                    State
-	StateConnectionError               State
-	StateServerUnreachable             State
-	StateWaitingForNetwork             State
-	StateServerCertificateError        State
-	StateClientCertificateExpiredError State
-	StateClientCertificateUnknownCA    State
-	StateDisconnected                  State
+	StateConnecting                    string
+	StateConnected                     string
+	StateSoftJailed                    string
+	StateHardJailed                    string
+	StateConnectionError               string
+	StateServerUnreachable             string
+	StateWaitingForNetwork             string
+	StateServerCertificateError        string
+	StateClientCertificateExpiredError string
+	StateClientCertificateUnknownCA    string
+	StateDisconnected                  string
 
 	// Error codes
-	ErrorCodeUnknown                   ErrorCode
-	ErrorCodeGuestSession              ErrorCode
-	ErrorCodeRestrictedServer          ErrorCode
-	ErrorCodeBadCertSignature          ErrorCode
-	ErrorCodeCertNotProvided           ErrorCode
-	ErrorCodeCertificateExpired        ErrorCode
-	ErrorCodeCertificateRevoked        ErrorCode
-	ErrorCodeMaxSessionsUnknown        ErrorCode
-	ErrorCodeMaxSessionsFree           ErrorCode
-	ErrorCodeMaxSessionsBasic          ErrorCode
-	ErrorCodeMaxSessionsPlus           ErrorCode
-	ErrorCodeMaxSessionsVisionary      ErrorCode
-	ErrorCodeMaxSessionsPro            ErrorCode
-	ErrorCodeKeyUsedMultipleTimes      ErrorCode
-	ErrorCodeServerError               ErrorCode
-	ErrorCodePolicyViolationLowPlan    ErrorCode
-	ErrorCodePolicyViolationDelinquent ErrorCode
-	ErrorCodeUserTorrentNotAllowed     ErrorCode
-	ErrorCodeUserBadBehavior           ErrorCode
+	ErrorCodeUnknown                   int
+	ErrorCodeGuestSession              int
+	ErrorCodeRestrictedServer          int
+	ErrorCodeBadCertSignature          int
+	ErrorCodeCertNotProvided           int
+	ErrorCodeCertificateExpired        int
+	ErrorCodeCertificateRevoked        int
+	ErrorCodeMaxSessionsUnknown        int
+	ErrorCodeMaxSessionsFree           int
+	ErrorCodeMaxSessionsBasic          int
+	ErrorCodeMaxSessionsPlus           int
+	ErrorCodeMaxSessionsVisionary      int
+	ErrorCodeMaxSessionsPro            int
+	ErrorCodeKeyUsedMultipleTimes      int
+	ErrorCodeServerError               int
+	ErrorCodePolicyViolationLowPlan    int
+	ErrorCodePolicyViolationDelinquent int
+	ErrorCodeUserTorrentNotAllowed     int
+	ErrorCodeUserBadBehavior           int
 
 	LabelPartner    string
 	FeatureBouncing string
@@ -138,7 +137,7 @@ type messageSocketFactory = func(
 ) (*MessageSocket, error)
 
 type AgentConnection struct {
-	State  State
+	State  string
 	Status *StatusMessage
 
 	// private
@@ -156,7 +155,7 @@ type AgentConnection struct {
 
 type NativeClient interface {
 	Log(text string)
-	OnState(state State)
+	OnState(state string)
 	OnError(code int, description string)
 	OnStatusUpdate(status *StatusMessage)
 	OnTlsSessionStarted()
@@ -230,7 +229,7 @@ func (conn *AgentConnection) Close() {
 	}
 }
 
-func (conn *AgentConnection) terminalState(state State) {
+func (conn *AgentConnection) terminalState(state string) {
 	conn.setState(state)
 	<-conn.closeChannel
 }
@@ -266,7 +265,7 @@ func (conn *AgentConnection) SendGetStatus(withStatistics bool) {
 	}()
 }
 
-func (conn *AgentConnection) setState(state State) {
+func (conn *AgentConnection) setState(state string) {
 	conn.State = state
 	conn.client.OnState(state)
 }
