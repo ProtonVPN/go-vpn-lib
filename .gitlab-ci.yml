@@ -46,6 +46,7 @@ build android:
     - echo "$GOLANG_CHECKSUM go.tgz" | sha256sum -c
     - tar -C /usr/local -xzf go.tgz;
     - rm go.tgz;
+    - patch -p1 -f -N -r- -d /usr/local/go/ < wgAndroid/goruntime-boottime-over-monotonic.diff
     - export PATH="/usr/local/go/bin:$PATH";
     - go version
     - ls $ANDROID_NDK_HOME > /dev/null

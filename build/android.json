@@ -30,15 +30,31 @@
         "path": "github.com/ProtonVPN/go-vpn-lib.git",
         "version": "v0.0.0"
       },
-      "packages": ["ed25519", "localAgent", "vpnPing"]
+      "packages": ["ed25519", "localAgent", "vpnPing", "wgAndroid"]
+    }
+  ],
+  "requirements_build": [
+    {
+      "path": "golang.zx2c4.com/wireguard",
+      "version": "v0.0.20230223"
     }
   ],
   "replacements": [
     {
       "old":{
-        "path":"github.com/ProtonVPN/go-vpn-lib.git"
+        "path": "github.com/ProtonVPN/go-vpn-lib.git"
       },
       "local_path": "/builds/ProtonVPN/development/go-vpn-lib"
+    },
+    {
+      "old": {
+        "path": "golang.zx2c4.com/wireguard",
+        "version": "v0.0.20230223"
+      },
+      "new": {
+        "path": "github.com/ProtonVPN/wireguard-go",
+        "version": "c216a8c"
+      }
     }
   ]
 }

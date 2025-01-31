@@ -3,11 +3,13 @@
  * Copyright © 2017-2022 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
  */
 
-package main
+ package wgAndroid
+
+// This is a copy of wireguard-android/tools/tunnel/libwg-go/api-android.go with modifications
+// for use with gomobile instead of JNI interface.
 
 // #cgo LDFLAGS: -llog
 // #include <android/log.h>
-// #include "jni_go.h"
 import "C"
 
 import (
@@ -56,6 +58,10 @@ type TunnelHandle struct {
 var tunnelHandles map[int32]TunnelHandle
 var tunnelHandlesMutex sync.Mutex
 
+type SocketProtector interface {
+	ProtectFromVpn(fd int32) bool
+}
+
 func init() {
 	tunnelHandles = make(map[int32]TunnelHandle)
 	signals := make(chan os.Signal)
@@ -76,8 +82,7 @@ func init() {
 	}()
 }
 
-//export wgTurnOn
-func wgTurnOn(interfaceName string, tunFd int32, settings string, socketType string, allowedSrcAddresses string) int32 {
+func WgTurnOn(interfaceName string, tunFd int32, settings string, socketType string, socketProtector SocketProtector, allowedSrcAddresses string) int32 {
 	tag := cstring("WireGuard/GoBackend/" + interfaceName)
 	connLogger := conn.Logger{
 		Verbosef: AndroidLogger{level: C.ANDROID_LOG_DEBUG, tag: tag}.Printf,
@@ -93,10 +98,15 @@ func wgTurnOn(interfaceName string, tunFd int32, settings string, socketType str
 	}
 
 	protectSocket := func(fd int) int {
-		return int(C.protectSocket(C.int(fd)))
+		success := socketProtector.ProtectFromVpn(int32(fd))
+		if success {
+			return 0
+		}
+		return -1
 	}
 
 	logger.Verbosef("Attaching to interface %v", name)
+	logger.Verbosef("Allowed addresses: " + allowedSrcAddresses)
 	manager := device.NewWireGuardStateManager(logger, socketType == "udp")
 	device := device.NewDevice(tun, conn.CreateStdNetBind(socketType, &connLogger, manager.SocketErrChan, protectSocket),
 		logger, manager.HandshakeStateChan, allowedSrcAddresses)
@@ -169,13 +179,13 @@ func getTunnelHandleWithLock(tunnelHandle int32) (TunnelHandle, bool) {
 	return handle, ok
 }
 
-//export wgTurnOff
-func wgTurnOff(tunnelHandle int32) {
+
+func WgTurnOff(tunnelHandle int32) {
 	handle, ok := getAndDeleteHandle(tunnelHandle)
 	if !ok {
 		return
 	}
-	
+
 	if handle.uapi != nil {
 		handle.uapi.Close()
 	}
@@ -183,18 +193,16 @@ func wgTurnOff(tunnelHandle int32) {
 	handle.manager.Close()
 }
 
-//export wgSetNetworkAvailable
-func wgSetNetworkAvailable(tunnelHandle int32, available int) int {
+func WgSetNetworkAvailable(tunnelHandle int32, available bool) int {
 	handle, ok := getTunnelHandleWithLock(tunnelHandle)
 	if !ok {
 		return -1
 	}
-	handle.manager.SetNetworkAvailable(available != 0)
+	handle.manager.SetNetworkAvailable(available)
 	return 0
 }
 
-//export wgGetState
-func wgGetState(tunnelHandle int32) int {
+func WgGetState(tunnelHandle int32) int {
 	handle, ok := getTunnelHandleWithLock(tunnelHandle)
 	if !ok {
 		return -1
@@ -202,8 +210,7 @@ func wgGetState(tunnelHandle int32) int {
 	return int(handle.manager.GetState())
 }
 
-//export wgGetSocketV4
-func wgGetSocketV4(tunnelHandle int32) int32 {
+func WgGetSocketV4(tunnelHandle int32) int32 {
 	handle, ok := getTunnelHandleWithLock(tunnelHandle)
 	if !ok {
 		return -1
@@ -219,8 +226,7 @@ func wgGetSocketV4(tunnelHandle int32) int32 {
 	return int32(fd)
 }
 
-//export wgGetSocketV6
-func wgGetSocketV6(tunnelHandle int32) int32 {
+func WgGetSocketV6(tunnelHandle int32) int32 {
 	handle, ok := getTunnelHandleWithLock(tunnelHandle)
 	if !ok {
 		return -1
@@ -236,35 +242,31 @@ func wgGetSocketV6(tunnelHandle int32) int32 {
 	return int32(fd)
 }
 
-//export wgGetConfig
-func wgGetConfig(tunnelHandle int32) *C.char {
+func WgGetConfig(tunnelHandle int32) string {
 	handle, ok := getTunnelHandleWithLock(tunnelHandle)
 	if !ok {
-		return nil
+		return ""
 	}
 	settings, err := handle.device.IpcGet()
 	if err != nil {
-		return nil
+		return ""
 	}
-	return C.CString(settings)
+	return settings
 }
 
-//export wgVersion
-func wgVersion() *C.char {
+func WgVersion() string {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
-		return C.CString("unknown")
+		return "unknown"
 	}
 	for _, dep := range info.Deps {
 		if dep.Path == "golang.zx2c4.com/wireguard" {
 			parts := strings.Split(dep.Version, "-")
 			if len(parts) == 3 && len(parts[2]) == 12 {
-				return C.CString(parts[2][:7])
+				return parts[2][:7]
 			}
-			return C.CString(dep.Version)
+			return dep.Version
 		}
 	}
-	return C.CString("unknown")
+	return "unknown"
 }
-
-func main() {}
