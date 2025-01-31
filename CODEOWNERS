@@ -1,8 +1,2 @@
 # ownership: loose
-*	@ProtonVPN/groups/android-developers 
-/build/	@ProtonVPN/groups/android-developers 
-/ed25519/	@ProtonVPN/groups/android-developers 
-/gradle/	@ProtonVPN/groups/android-developers 
-/localAgent/	@ProtonVPN/groups/android-developers 
-/localAgentWin/	@ProtonVPN/groups/android-developers 
-/vpnPing/	@ProtonVPN/groups/android-developers 
+*	@ProtonVPN/groups/android-developers
