@@ -64,7 +64,7 @@ afterEvaluate {
                     url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
                     credentials {
                         username sonatypeUser
-                        password System.getenv("SONATYPE_PASSWORD")
+                        password System.getenv("SONATYPE_PASSWORD") //gitleaks:allow
                     }
                 }
             }
