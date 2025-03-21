@@ -26,6 +26,7 @@ import (
 
 	"golang.org/x/sys/unix"
 	"golang.zx2c4.com/wireguard/conn"
+	server_name_utils "golang.zx2c4.com/wireguard/conn/server_name_utils"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/ipc"
 	"golang.zx2c4.com/wireguard/tun"
@@ -82,7 +83,7 @@ func init() {
 	}()
 }
 
-func WgTurnOn(interfaceName string, tunFd int32, settings string, socketType string, socketProtector SocketProtector, allowedSrcAddresses string) int32 {
+func WgTurnOn(interfaceName string, tunFd int32, settings string, socketType string, socketProtector SocketProtector, allowedSrcAddresses string, serverNameStrategy int32) int32 {
 	tag := cstring("WireGuard/GoBackend/" + interfaceName)
 	connLogger := conn.Logger{
 		Verbosef: AndroidLogger{level: C.ANDROID_LOG_DEBUG, tag: tag}.Printf,
@@ -108,8 +109,8 @@ func WgTurnOn(interfaceName string, tunFd int32, settings string, socketType str
 	logger.Verbosef("Attaching to interface %v", name)
 	logger.Verbosef("Allowed addresses: " + allowedSrcAddresses)
 	manager := device.NewWireGuardStateManager(logger, socketType == "udp")
-	device := device.NewDevice(tun, conn.CreateStdNetBind(socketType, &connLogger, manager.SocketErrChan, protectSocket),
-		logger, manager.HandshakeStateChan, allowedSrcAddresses)
+	stdNetBind := conn.CreateStdNetBind(socketType, server_name_utils.ServerNameStrategy(serverNameStrategy), &connLogger, manager.SocketErrChan, protectSocket)
+	device := device.NewDevice(tun, stdNetBind, logger, manager.HandshakeStateChan, allowedSrcAddresses)
 
 	err = device.IpcSet(settings)
 	if err != nil {
