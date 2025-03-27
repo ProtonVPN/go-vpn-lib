@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -143,7 +142,6 @@ type AgentConnection struct {
 	// private
 	closed             atomic.Bool
 	closeChannel       chan struct{}
-	cleanupWg          sync.WaitGroup
 	connectivity       bool
 	updateConnectivity chan bool
 	client             NativeClient
@@ -247,17 +245,11 @@ func (conn *AgentConnection) terminalState(state string) {
 
 func (conn *AgentConnection) cleanup() {
 	<-conn.closeChannel
-	conn.cleanupWg.Wait()
-	close(conn.updateConnectivity)
-	close(conn.updateFeatures)
-	close(conn.getStatusRequests)
 }
 
 func (conn *AgentConnection) SetFeatures(features *Features) {
 	conn.requestedFeatures.update(features)
-	conn.cleanupWg.Add(1)
 	go func() {
-		defer conn.cleanupWg.Done()
 		select {
 		case conn.updateFeatures <- true:
 		case <-conn.closeChannel:
@@ -266,9 +258,7 @@ func (conn *AgentConnection) SetFeatures(features *Features) {
 }
 
 func (conn *AgentConnection) SendGetStatus(withStatistics bool) {
-	conn.cleanupWg.Add(1)
 	go func() {
-		defer conn.cleanupWg.Done()
 		select {
 		case conn.getStatusRequests <- withStatistics:
 		case <-conn.closeChannel:
@@ -282,9 +272,7 @@ func (conn *AgentConnection) setState(state string) {
 }
 
 func (conn *AgentConnection) SetConnectivity(available bool) {
-	conn.cleanupWg.Add(1)
 	go func() {
-		defer conn.cleanupWg.Done()
 		conn.connectivity = available
 		select {
 		case conn.updateConnectivity <- available:
