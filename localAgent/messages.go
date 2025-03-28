@@ -20,6 +20,7 @@
 package localAgent
 
 import "encoding/json"
+import "sync"
 
 var avgAdSizeBytes int64 = 200 * 1024
 var avgTrackerSizeBytes int64 = 50 * 1024
@@ -31,6 +32,7 @@ type ErrorMessage struct {
 }
 
 type StringToValueMap struct {
+	sync.RWMutex
 	fields map[string]interface{}
 }
 
@@ -50,24 +52,35 @@ func (feat *StringToValueMap) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	feat.Lock()
+	defer feat.Unlock()
 	feat.fields = fields
 	return nil
 }
 
 func (feat *StringToValueMap) MarshalJSON() ([]byte, error) {
+	feat.RLock()
+	defer feat.RUnlock()
 	return json.Marshal(feat.fields)
 }
 
 func (feat *StringToValueMap) HasKey(name string) bool {
+	feat.RLock()
+	defer feat.RUnlock()
 	_, ok := feat.fields[name]
 	return ok
 }
 
 func (feat *StringToValueMap) GetCount() int {
+	feat.RLock()
+	defer feat.RUnlock()
 	return len(feat.fields)
 }
 
 func (feat *StringToValueMap) GetKeys() *StringArray {
+	feat.RLock()
+	defer feat.RUnlock()
+
 	result := make([]string, 0, len(feat.fields))
 	for key := range feat.fields {
 		result = append(result, key)
@@ -76,18 +89,27 @@ func (feat *StringToValueMap) GetKeys() *StringArray {
 }
 
 func (feat *StringToValueMap) Remove(key string) {
+	feat.Lock()
+	defer feat.Unlock()
 	delete(feat.fields, key)
 }
 
 func (feat *StringToValueMap) SetInt(name string, value int64) {
+	feat.Lock()
+	defer feat.Unlock()
 	feat.fields[name] = float64(value)
 }
 
 func (feat *StringToValueMap) GetInt(name string) int64 {
+	feat.RLock()
+	defer feat.RUnlock()
 	return int64(feat.fields[name].(float64))
 }
 
 func (feat *StringToValueMap) GetIntOrDefault(name string, defautVal int64) int64 {
+	feat.RLock()
+	defer feat.RUnlock()
+
 	if v, ok := feat.fields[name]; ok {
 		return int64(v.(float64))
 	}
@@ -95,14 +117,20 @@ func (feat *StringToValueMap) GetIntOrDefault(name string, defautVal int64) int6
 }
 
 func (feat *StringToValueMap) SetString(name string, value string) {
+	feat.Lock()
+	defer feat.Unlock()
 	feat.fields[name] = value
 }
 
 func (feat *StringToValueMap) GetString(name string) string {
+	feat.RLock()
+	defer feat.RUnlock()
 	return feat.fields[name].(string)
 }
 
 func (feat *StringToValueMap) GetStringOrDefault(name string, defaultVal string) string {
+	feat.RLock()
+	defer feat.RUnlock()
 	if v, ok := feat.fields[name]; ok {
 		return v.(string)
 	}
@@ -110,24 +138,38 @@ func (feat *StringToValueMap) GetStringOrDefault(name string, defaultVal string)
 }
 
 func (feat *StringToValueMap) SetBool(name string, value bool) {
+	feat.Lock()
+	defer feat.Unlock()
 	feat.fields[name] = value
 }
 
 func (feat *StringToValueMap) GetBool(name string) bool {
+	feat.RLock()
+	defer feat.RUnlock()
 	return feat.fields[name].(bool)
 }
 
 func (feat *StringToValueMap) GetMap(name string) *StringToValueMap {
+	feat.RLock()
+	defer feat.RUnlock()
 	return &StringToValueMap{fields: feat.fields[name].(map[string]interface{})}
 }
 
 func (feat *StringToValueMap) update(other *Features) {
+	feat.Lock()
+	other.RLock()
+	defer feat.Unlock()
+	defer other.RUnlock()
 	for k, v := range other.fields {
 		feat.fields[k] = v
 	}
 }
 
 func (feat *StringToValueMap) diffTo(other *Features) *Features {
+	feat.RLock()
+	other.RLock()
+	defer feat.RUnlock()
+	defer other.RUnlock()
 	result := NewFeatures()
 	for k, v := range other.fields {
 		if feat.fields[k] != v {
