@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -32,9 +33,10 @@ import (
 var testKey = "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIOHlLmXMiprlnHwzI3OLGrcZVy52XITQGUq4vfGo2Yj2\n-----END PRIVATE KEY-----"
 var testCert = "-----BEGIN CERTIFICATE-----\nMIIBHjCB0QIUTM7tBq1mnKSLlwuWugFy1uFiV/YwBQYDK2VwMDIxCzAJBgNVBAYT\nAkNIMQ8wDQYDVQQIDAZHZW5ldmExEjAQBgNVBAoMCXRlc3QgY2VydDAeFw0yMTA0\nMjgxNjMwMDBaFw0zMTA0MjYxNjMwMDBaMDIxCzAJBgNVBAYTAkNIMQ8wDQYDVQQI\nDAZHZW5ldmExEjAQBgNVBAoMCXRlc3QgY2VydDAqMAUGAytlcAMhAIEQpBEp1Hxl\nN7IX/oeN5oIRfNjRNtCqcRLZ0iKdfUuUMAUGAytlcANBAGjIXvothfBryJqC6X3L\nGc6wQfhBE6PxkcJLLguvNvIAK197SATYz+KJfjyOlWnuy9El0v/DBCQ3Y44oaZTN\nkQE=\n-----END CERTIFICATE-----"
 
-var testLogs []string
-var testErrors []ErrorMessage
-var testStates []string
+type testState struct {
+	mockSocket *mockMessageSocket
+	mockClient mockNativeClient
+}
 
 var jailedStatusResponse = `{
     "status": {
@@ -48,8 +50,14 @@ var jailedStatusResponse = `{
     }
 }`
 
-var mockSocket *mockMessageSocket
-var mockClient mockNativeClient
+type mockNativeClient struct {
+	NativeClient
+	testErrors []ErrorMessage
+	testStates []string
+	// Needed for access to testStates and testErrors.
+	// NativeClient doesn't have such synchronization so adding this mutex may hide some race conditions in test.
+	mu         *sync.Mutex
+}
 
 type mockMessageSocket struct {
 	socket      *MessageSocket
@@ -78,14 +86,22 @@ func (socket *mockMessageSocket) Receive() (string, error) {
 
 func (socket *mockMessageSocket) Close() {}
 
-func openMockSocket(
+func createOpenMockSocket(mockSocket *mockMessageSocket) func(
 	clientCert tls.Certificate,
 	serverCAsPEM string,
 	host string,
 	certServerName string,
 	log func(string),
 ) (*MessageSocket, error) {
-	return mockSocket.socket, nil
+	return func(
+		clientCert tls.Certificate,
+		serverCAsPEM string,
+		host string,
+		certServerName string,
+		log func(string),
+	) (*MessageSocket, error) {
+		return mockSocket.socket, nil
+	}
 }
 
 func failOpenSocket(
@@ -98,28 +114,27 @@ func failOpenSocket(
 	return nil, &net.OpError{Err: syscall.ECONNREFUSED}
 }
 
-type mockNativeClient struct {
-	NativeClient
-}
-
-func (client mockNativeClient) Log(text string) {
+func (client *mockNativeClient) Log(text string) {
 	println(text)
-	testLogs = append(testLogs, text)
 }
 
-func (client mockNativeClient) OnState(state string) {
-	testStates = append(testStates, state)
+func (client *mockNativeClient) OnState(state string) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	client.testStates = append(client.testStates, state)
 }
 
-func (client mockNativeClient) OnError(code int, description string) {
-	testErrors = append(testErrors, ErrorMessage{Code: code, Description: description})
+func (client *mockNativeClient) OnError(code int, description string) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	client.testErrors = append(client.testErrors, ErrorMessage{Code: code, Description: description})
 }
 
-func (client mockNativeClient) OnStatusUpdate(status *StatusMessage) {}
-func (client mockNativeClient) OnTlsSessionStarted()                 {}
-func (client mockNativeClient) OnTlsSessionEnded()                   {}
+func (client *mockNativeClient) OnStatusUpdate(status *StatusMessage) {}
+func (client *mockNativeClient) OnTlsSessionStarted()                 {}
+func (client *mockNativeClient) OnTlsSessionEnded()                   {}
 
-func createTestConnection(client mockNativeClient, features *Features, socketFactory messageSocketFactory) *AgentConnection {
+func createTestConnection(client *mockNativeClient, features *Features, socketFactory messageSocketFactory) *AgentConnection {
 	agent, _ := newAgentConnection(testCert, testKey, "", "localhost", "localhost",
 		client, features, true, socketFactory)
 	return agent
@@ -138,34 +153,38 @@ func (socket *mockMessageSocket) mockRecvResults(results ...interface{}) {
 }
 
 func newMockSocket() *mockMessageSocket {
-	return &mockMessageSocket{
-		socket: newMessageSocket(
-			func(socket *MessageSocket, msg string) error {
-				return mockSocket.Send(msg)
-			},
-			func(socket *MessageSocket) (string, error) {
-				return mockSocket.Receive()
-			},
-			func(socket *MessageSocket) error {
-				return nil
-			},
-		),
+	mockSocket := mockMessageSocket{
 		sendResults: make(chan error, 100),
 		recvResults: make(chan interface{}, 100),
 	}
+	mockSocket.socket = newMessageSocket(
+		func(socket *MessageSocket, msg string) error {
+			return mockSocket.Send(msg)
+		},
+		func(socket *MessageSocket) (string, error) {
+			return mockSocket.Receive()
+		},
+		func(socket *MessageSocket) error {
+			return nil
+		},
+	)
+	return &mockSocket
 }
 
-func setup() {
-	mockSocket = newMockSocket()
-	testLogs = []string{}
-	testErrors = []ErrorMessage{}
-	testStates = []string{}
-	mockClient = mockNativeClient{}
+func setup() (*mockMessageSocket, *mockNativeClient) {
+	mockClient := mockNativeClient{
+		mu: &sync.Mutex{},
+	}
+	return newMockSocket(), &mockClient
+}
+
+func lastState(client *mockNativeClient) string {
+	return client.testStates[len(client.testStates) - 1]
 }
 
 func TestAgentConnection_ConnectAndUnjail(t *testing.T) {
 	assert := assert.New(t)
-	setup()
+	mockSocket, mockClient := setup()
 
 	unjaiedStatusResponse := strings.Replace(jailedStatusResponse, "jailed", "connected", -1)
 
@@ -173,7 +192,7 @@ func TestAgentConnection_ConnectAndUnjail(t *testing.T) {
 	mockSocket.mockRecvResults(
 		jailedStatusResponse,
 		unjaiedStatusResponse)
-	conn := createTestConnection(mockClient, nil, openMockSocket)
+	conn := createTestConnection(mockClient, nil, createOpenMockSocket(mockSocket))
 
 	features := NewFeatures()
 	features.SetBool("jail", false)
@@ -182,34 +201,40 @@ func TestAgentConnection_ConnectAndUnjail(t *testing.T) {
 	// TODO: ugly
 	time.Sleep(2 * time.Millisecond)
 
+	mockClient.mu.Lock()
+	defer mockClient.mu.Unlock()
 	assert.Equal(0, len(mockSocket.recvResults))
 	assert.Equal(0, len(mockSocket.sendResults))
 
-	assert.Equal("connected", conn.Status.State)
-	assert.Equal([]string{consts.StateConnecting, consts.StateSoftJailed, consts.StateConnected}, testStates)
-	assert.Equal(0, len(testErrors))
+	assert.Equal("Connected", lastState(mockClient))
+	assert.Equal([]string{consts.StateConnecting, consts.StateSoftJailed, consts.StateConnected}, mockClient.testStates)
+	assert.Equal(0, len(mockClient.testErrors))
 }
 
 func TestAgentConnection_ConnectionError(t *testing.T) {
 	assert := assert.New(t)
-	setup()
+	_, mockClient := setup()
 
 	createTestConnection(mockClient, nil, failOpenSocket)
 
 	time.Sleep(2 * time.Millisecond)
 
-	assert.Equal([]string{consts.StateConnecting, consts.StateServerUnreachable}, testStates)
+	mockClient.mu.Lock()
+	defer mockClient.mu.Unlock()
+	assert.Equal([]string{consts.StateConnecting, consts.StateServerUnreachable}, mockClient.testStates)
 }
 
 func TestAgentConnection_ReceiveError(t *testing.T) {
 	assert := assert.New(t)
-	setup()
+	mockSocket, mockClient := setup()
 
 	mockSocket.mockSendResults(nil)
 	mockSocket.mockRecvResults(&net.OpError{Err: syscall.ECONNABORTED})
-	createTestConnection(mockClient, nil, openMockSocket)
+	createTestConnection(mockClient, nil, createOpenMockSocket(mockSocket))
 
 	time.Sleep(2 * time.Millisecond)
 
-	assert.Equal([]string{consts.StateConnecting, consts.StateConnectionError}, testStates)
+	mockClient.mu.Lock()
+	defer mockClient.mu.Unlock()
+	assert.Equal([]string{consts.StateConnecting, consts.StateConnectionError}, mockClient.testStates)
 }
