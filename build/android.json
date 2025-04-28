@@ -6,7 +6,8 @@
   "go_mobile_dir":"mobile",
   "go_mobile_flags": [
     "-x",
-    "-ldflags=\"-s -w\""
+    "-ldflags=\"-s -w\"",
+    "-androidapi 25"
   ],
   "build_name":"govpn",
   "java_pkg":"com.proton.gopenpgp",

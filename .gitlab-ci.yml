@@ -30,7 +30,7 @@ test:
     - go test $MODULES
 
 build android:
-  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.1
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.8
   stage: build
   tags:
     - shared-medium
@@ -51,7 +51,7 @@ build android:
     - go version
     - ls $ANDROID_NDK_HOME > /dev/null
     - export ANDROID_HOME=$ANDROID_SDK_ROOT
-    - export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/23.1.7779620
+    - export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.1.13356709
     - export GOPRIVATE=gitlab.protontech.ch
     - git config --global url."git@gitlab.protontech.ch:".insteadOf "https://gitlab.protontech.ch/"
     - cd ..
@@ -72,7 +72,7 @@ build android:
       - $ARTIFACTS_DIR/*
 
 publish android:
-  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.1
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.8
   stage: publish
   only:
     refs:
@@ -120,7 +120,7 @@ build iOS:
       - $ARTIFACTS_DIR/*
 
 sync-app:
-  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci:v2.1.1
+  image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.8
   cache: {}
   stage: mirror
   only:
