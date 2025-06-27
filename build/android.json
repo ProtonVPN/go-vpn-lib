@@ -1,6 +1,6 @@
 {
-  "go_version":"1.23.4",
-  "go_SHA256_checksum": "6924efde5de86fe277676e929dc9917d466efa02fb934197bc2eba35d5680971",
+  "go_version":"1.24.4",
+  "go_SHA256_checksum": "77e5da33bb72aeaef1ba4418b6fe511bc4d041873cbf82e5aa6318740df98717",
   "build_dir":"build",
   "out_dir":"out",
   "go_mobile_dir":"mobile",
@@ -54,7 +54,7 @@
       },
       "new": {
         "path": "github.com/ProtonVPN/wireguard-go",
-        "version": "b2a93eb"
+        "version": "4bd8328"
       }
     }
   ]
