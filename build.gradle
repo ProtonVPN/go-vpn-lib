@@ -59,9 +59,10 @@ afterEvaluate {
         }
         repositories {
             def sonatypeUser = System.getenv("SONATYPE_USER")
+            def sonatypeUrl = System.getenv("SONATYPE_URL")
             if (sonatypeUser != null) {
                 maven {
-                    url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                    url sonatypeUrl
                     credentials {
                         username sonatypeUser
                         password System.getenv("SONATYPE_PASSWORD") //gitleaks:allow
