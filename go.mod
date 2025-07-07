@@ -1,6 +1,6 @@
 module github.com/ProtonVPN/go-vpn-lib
 
-go 1.24.4
+go 1.23
 
 require (
 	github.com/pkg/errors v0.9.1
