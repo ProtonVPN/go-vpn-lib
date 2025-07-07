@@ -3,7 +3,6 @@ plugins {
     id "com.vanniktech.maven.publish" version "0.33.0"
 }
 
-apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 ext {
@@ -19,56 +18,10 @@ task publishSlack {
 }
 
 afterEvaluate {
-    publishing {
-        publications {
-            govpn(MavenPublication) {
-                groupId 'me.proton.vpn'
-                artifactId 'go-vpn-lib'
-                version Helpers.getFullVersionName()
-                artifact("artifacts/govpn.aar")
-                artifact("artifacts/govpn-sources.jar") { classifier = "sources" }
-                signing {
-                    def signingKey = findProperty("signingKey")
-                    def signingPassword = findProperty("signingPassword")
-                    useInMemoryPgpKeys(signingKey, signingPassword)
-                    sign publishing.publications.govpn
-                }
-                pom {
-                    name = "me.proton.vpn:go-vpn-lib"
-                    description = "Go library with shared code for ProtonVPN clients"
-                    url = "https://${githubRepo}"
-                    licenses {
-                        license {
-                            name = "GNU GENERAL PUBLIC LICENSE, Version 3.0"
-                            url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = "opensource@proton.me"
-                            name = "Open Source Proton"
-                            email = "opensource@proton.me"
-                        }
-                    }
-                    scm {
-                        connection = "scm:git:git://${githubRepo}.git"
-                        developerConnection = "scm:git:ssh://${githubRepo}.git"
-                        url = "https://${githubRepo}"
-                    }
-                }
-            }
-        }
-        repositories {
-            def sonatypeUser = System.getenv("SONATYPE_USER")
-            if (sonatypeUser != null) {
-                maven {
-                    credentials {
-                        username sonatypeUser
-                        password System.getenv("SONATYPE_PASSWORD") //gitleaks:allow
-                    }
-                }
-            }
-        }
+
+    artifacts {
+        add("archives", file("artifacts/govpn.aar"))
+        add("archives", file("artifacts/govpn-sources.jar"))
     }
 
     mavenPublishing {
@@ -76,6 +29,29 @@ afterEvaluate {
         signAllPublications()
 
         coordinates("me.proton.vpn", "go-vpn-lib", Helpers.getFullVersionName())
+        pom {
+            name = "me.proton.vpn:go-vpn-lib"
+            description = "Go library with shared code for ProtonVPN clients"
+            url = "https://${githubRepo}"
+            licenses {
+                license {
+                    name = "GNU GENERAL PUBLIC LICENSE, Version 3.0"
+                    url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
+                }
+            }
+            developers {
+                developer {
+                    id = "opensource@proton.me"
+                    name = "Open Source Proton"
+                    email = "opensource@proton.me"
+                }
+            }
+            scm {
+                connection = "scm:git:git://${githubRepo}.git"
+                developerConnection = "scm:git:ssh://${githubRepo}.git"
+                url = "https://${githubRepo}"
+            }
+        }
     }
 }
 

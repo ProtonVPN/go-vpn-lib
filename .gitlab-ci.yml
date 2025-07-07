@@ -8,6 +8,10 @@ variables:
   MODULES: ./localAgent ./ed25519 ./vpnPing
   ARTIFACTS_DIR: artifacts
   GIT_FETCH_DEFAULT_BRANCH: "yes" # For gitleaks scan.
+  ORG_GRADLE_PROJECT_mavenCentralUsername: $SONATYPE_USER
+  ORG_GRADLE_PROJECT_mavenCentralPassword: $SONATYPE_PASSWORD
+  ORG_GRADLE_PROJECT_signingInMemoryKey: $ORG_GRADLE_PROJECT_signingKey
+  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: $ORG_GRADLE_PROJECT_signingPassword
 
 stages:
   - test
@@ -78,7 +82,7 @@ publish android:
     refs:
       - master
   script:
-    - ./gradlew publish
+    - ./gradlew publishToMavenCentral --no-configuration-cache
     - ./gradlew publishSlack
 
 build iOS:
