@@ -62,6 +62,7 @@ afterEvaluate {
             def sonatypeUrl = System.getenv("SONATYPE_URL")
             if (sonatypeUser != null) {
                 maven {
+                    name "ossrh-staging-api"
                     url sonatypeUrl
                     credentials {
                         username sonatypeUser
