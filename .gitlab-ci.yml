@@ -10,8 +10,6 @@ variables:
   GIT_FETCH_DEFAULT_BRANCH: "yes" # For gitleaks scan.
   ORG_GRADLE_PROJECT_mavenCentralUsername: $SONATYPE_USER
   ORG_GRADLE_PROJECT_mavenCentralPassword: $SONATYPE_PASSWORD
-  ORG_GRADLE_PROJECT_signingInMemoryKey: $ORG_GRADLE_PROJECT_signingKey
-  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: $ORG_GRADLE_PROJECT_signingPassword
 
 stages:
   - test
@@ -78,10 +76,13 @@ build android:
 publish android:
   image: ${PROTON_CI_REGISTRY}/android-shared/docker-android/oci-ndk:v2.1.8
   stage: publish
+  variables:
+     ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: $SIGNING_PASSWORD
   only:
     refs:
       - master
   script:
+    - export ORG_GRADLE_PROJECT_signingInMemoryKey=$(echo "$SIGNING_KEY_BASE64" | base64 -d)
     - ./gradlew publishToMavenCentral --no-configuration-cache
     - ./gradlew publishSlack
 

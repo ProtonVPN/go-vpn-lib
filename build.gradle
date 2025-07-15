@@ -1,6 +1,6 @@
 plugins {
-    id 'signing'
-    id "com.vanniktech.maven.publish" version "0.33.0"
+    id "maven-publish"
+    id "com.vanniktech.maven.publish.base" version "0.33.0"
 }
 
 apply plugin: 'signing'
@@ -19,39 +19,44 @@ task publishSlack {
 
 afterEvaluate {
 
-    artifacts {
-        add("archives", file("artifacts/govpn.aar"))
-        add("archives", file("artifacts/govpn-sources.jar"))
+    publishing {
+        publications {
+            govpn(MavenPublication) {
+                groupId 'me.proton.vpn'
+                artifactId 'go-vpn-lib'
+                version Helpers.getFullVersionName()
+                artifact("artifacts/govpn.aar")
+                artifact("artifacts/govpn-sources.jar") { classifier = "sources" }
+                pom {
+                    name = "me.proton.vpn:go-vpn-lib"
+                    description = "Go library with shared code for Proton VPN clients"
+                    url = "https://${githubRepo}"
+                    licenses {
+                        license {
+                            name = "GNU GENERAL PUBLIC LICENSE, Version 3.0"
+                            url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = "opensource@proton.me"
+                            name = "Open Source Proton"
+                            email = "opensource@proton.me"
+                        }
+                    }
+                    scm {
+                       connection = "scm:git:git://${githubRepo}.git"
+                       developerConnection = "scm:git:ssh://${githubRepo}.git"
+                       url = "https://${githubRepo}"
+                    }
+                }
+            }
+        }
     }
 
     mavenPublishing {
         publishToMavenCentral(false)
         signAllPublications()
-
-        coordinates("me.proton.vpn", "go-vpn-lib", Helpers.getFullVersionName())
-        pom {
-            name = "me.proton.vpn:go-vpn-lib"
-            description = "Go library with shared code for ProtonVPN clients"
-            url = "https://${githubRepo}"
-            licenses {
-                license {
-                    name = "GNU GENERAL PUBLIC LICENSE, Version 3.0"
-                    url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
-                }
-            }
-            developers {
-                developer {
-                    id = "opensource@proton.me"
-                    name = "Open Source Proton"
-                    email = "opensource@proton.me"
-                }
-            }
-            scm {
-                connection = "scm:git:git://${githubRepo}.git"
-                developerConnection = "scm:git:ssh://${githubRepo}.git"
-                url = "https://${githubRepo}"
-            }
-        }
     }
 }
 
