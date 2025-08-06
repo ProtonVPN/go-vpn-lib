@@ -17,27 +17,28 @@ type WindowsClient struct {
 }
 
 type ConnectionDetailsType struct {
-	DeviceIp        string
-	DeviceCountry   string
-	ServerIpv4      string
-	ServerIpv6      string
+	DeviceIp      string
+	DeviceCountry string
+	ServerIpv4    string
+	ServerIpv6    string
 }
 
 type Event struct {
-	EventType           string
-	Log                 string
-	State               string
-	Code                int
-	Desc                string
-	ConnectionDetails   *ConnectionDetailsType
-	FeaturesStatistics	string
+	EventType          string
+	Log                string
+	State              string
+	Code               int
+	Desc               string
+	ConnectionDetails  *ConnectionDetailsType
+	FeaturesStatistics string
+	Restrictions       *localAgent.StringArray
 }
 
 func (c *WindowsClient) Log(log string) {
 	c.eventChannel <- &Event{EventType: "log", Log: log}
 }
 
-func (c *WindowsClient) OnState(s localAgent.State) {
+func (c *WindowsClient) OnState(s string) {
 	c.eventChannel <- &Event{EventType: "state", State: s}
 }
 
@@ -48,11 +49,11 @@ func (c *WindowsClient) OnError(code int, desc string) {
 func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
 	var connectionDetails *ConnectionDetailsType
 	if status.ConnectionDetails != nil {
-		connectionDetails = &ConnectionDetailsType {
-			DeviceIp: status.ConnectionDetails.DeviceIp,
+		connectionDetails = &ConnectionDetailsType{
+			DeviceIp:      status.ConnectionDetails.DeviceIp,
 			DeviceCountry: status.ConnectionDetails.DeviceCountry,
-			ServerIpv4: status.ConnectionDetails.ServerIpv4,
-			ServerIpv6: status.ConnectionDetails.ServerIpv6,
+			ServerIpv4:    status.ConnectionDetails.ServerIpv4,
+			ServerIpv6:    status.ConnectionDetails.ServerIpv6,
 		}
 	}
 
@@ -64,6 +65,10 @@ func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
 	}
 	if featuresStatistics != nil {
 		c.eventChannel <- &Event{EventType: "stats", FeaturesStatistics: string(featuresStatistics)}
+	}
+
+	if status.Restrictions != nil {
+		c.eventChannel <- &Event{EventType: "restrictions", Restrictions: status.Restrictions}
 	}
 }
 
@@ -82,6 +87,8 @@ func Connect(
 	certServerName,
 	featuresJson string,
 	connectivity bool,
+	keepAliveSeconds int,
+	keepAliveMaxCount int,
 ) []byte {
 
 	var clientCertPEMCopy = deepCopy(clientCertPEM)
@@ -103,7 +110,7 @@ func Connect(
 	currentClient.eventChannel = make(chan *Event, 10)
 	currentConnection, err = localAgent.NewAgentConnection(
 		clientCertPEMCopy, clientKeyPEMCopy, serverCAsPEMCOpy, hostCopy, certServerNameCopy, currentClient,
-		features, connectivity)
+		features, connectivity, keepAliveSeconds, keepAliveMaxCount)
 	if err != nil {
 		currentConnection = nil
 		return []byte(err.Error())
