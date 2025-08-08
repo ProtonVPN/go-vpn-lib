@@ -34,7 +34,7 @@ import (
 
 type AndroidLogger struct {
 	level C.int
-	tag   *C.char
+	tag   string
 }
 
 func cstring(s string) *C.char {
@@ -47,7 +47,9 @@ func cstring(s string) *C.char {
 }
 
 func (l AndroidLogger) Printf(format string, args ...interface{}) {
-	C.__android_log_write(l.level, l.tag, cstring(fmt.Sprintf(format, args...)))
+	msg := fmt.Sprintf(format, args...)
+	C.__android_log_write(l.level, cstring(l.tag), cstring(msg))
+	runtime.KeepAlive(msg) // make sure msg memory is not freed before __android_log_write finishes
 }
 
 type TunnelHandle struct {
@@ -84,7 +86,7 @@ func init() {
 }
 
 func WgTurnOn(interfaceName string, tunFd int32, settings string, socketType string, socketProtector SocketProtector, allowedSrcAddresses string, serverNameStrategy int32) int32 {
-	tag := cstring("WireGuard/GoBackend/" + interfaceName)
+	tag := "WireGuard/GoBackend/" + interfaceName
 	connLogger := conn.Logger{
 		Verbosef: AndroidLogger{level: C.ANDROID_LOG_DEBUG, tag: tag}.Printf,
 		Errorf:   AndroidLogger{level: C.ANDROID_LOG_ERROR, tag: tag}.Printf,
