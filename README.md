@@ -121,7 +121,7 @@ Go Mobile can only build code form public repositories. This repository is priva
 In the cloned repository 
 
 ```bash
-cd ~/Projects/Proton/VPN/go-vpn-lub
+cd ~/Projects/Proton/VPN/go-vpn-lib
 ```
 
 initialize a Go module
