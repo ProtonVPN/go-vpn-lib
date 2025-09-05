@@ -26,6 +26,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"sync/atomic"
 	"time"
 )
 
@@ -35,7 +36,7 @@ type MessageSocket struct {
 	sendErr chan error
 	recvErr chan error
 	close   chan bool
-	closed  bool
+	closed  atomic.Bool
 }
 
 func newMessageSocket(
@@ -52,7 +53,7 @@ func newMessageSocket(
 
 	go func() {
 		<-socket.close
-		socket.closed = true
+		socket.closed.Store(true)
 		closeSocket(socket) // #nosec G104 (ignore error)
 		close(socket.send)
 	}()
@@ -71,12 +72,12 @@ func newMessageSocket(
 	}()
 
 	go func() {
-		for !socket.closed {
+		for !socket.closed.Load() {
 			msg, err := recv(socket)
 			if err != nil {
 				socket.recvErr <- err
 				break
-			} else if !socket.closed {
+			} else if !socket.closed.Load() {
 				socket.recv <- msg
 			}
 		}
@@ -106,10 +107,10 @@ func openSocket(
 	}
 
 	keepaliveConfig := net.KeepAliveConfig{
-		Enable: true,
-		Idle: time.Duration(keepAliveSeconds) * time.Second,
+		Enable:   true,
+		Idle:     time.Duration(keepAliveSeconds) * time.Second,
 		Interval: time.Duration(keepAliveSeconds) * time.Second,
-		Count: keepAliveMaxCount,
+		Count:    keepAliveMaxCount,
 	}
 	dialer := net.Dialer{
 		Timeout:         5 * time.Second,
@@ -123,7 +124,7 @@ func openSocket(
 			writer := bufio.NewWriter(tlsConn)
 			reader := bufio.NewReader(tlsConn)
 
-			return newMessageSocket(
+			socket := newMessageSocket(
 				func(socket *MessageSocket, msg string) error {
 					return socket.Send(writer, msg, log)
 				},
@@ -131,13 +132,22 @@ func openSocket(
 					return socket.Receive(reader, log)
 				},
 				func(socket *MessageSocket) error {
+					log("LocalAgent: closing TLS connection gracefully")
+
+					// Set a deadline for graceful close
+					tlsConn.SetDeadline(time.Now().Add(2 * time.Second))
+
 					err := tlsConn.Close()
 					if err != nil {
 						log("LocalAgent error closing tls connection: " + err.Error())
+					} else {
+						log("LocalAgent: TLS connection closed successfully")
 					}
 					return err
 				},
-			), nil
+			)
+
+			return socket, nil
 		}
 	}
 	return nil, err
@@ -148,13 +158,13 @@ func (socket *MessageSocket) Send(writer *bufio.Writer, msg string, log func(str
 	msgLen := uint32(len(msg)) // #nosec G115 - it's unlikely to be negative, so the conversion is safe.
 
 	err := binary.Write(writer, binary.BigEndian, msgLen)
-	if err == nil && !socket.closed {
+	if err == nil && !socket.closed.Load() {
 		err = binary.Write(writer, binary.BigEndian, []byte(msg))
-		if err == nil && !socket.closed {
+		if err == nil && !socket.closed.Load() {
 			err = writer.Flush()
 		}
 	}
-	if err != nil && !socket.closed {
+	if err != nil && !socket.closed.Load() {
 		log("LocalAgent send error: " + err.Error())
 	}
 	return err
@@ -165,16 +175,16 @@ func (socket *MessageSocket) Receive(reader *bufio.Reader, log func(string)) (st
 
 	var msgLen uint32
 	err := binary.Read(reader, binary.BigEndian, &msgLen)
-	if err == nil && !socket.closed {
+	if err == nil && !socket.closed.Load() {
 		msgBytes := make([]byte, msgLen)
 		_, err = io.ReadFull(reader, msgBytes)
-		if err == nil && !socket.closed {
+		if err == nil && !socket.closed.Load() {
 			msgString := string(msgBytes)
 			log("LocalAgent received: " + msgString)
 			return msgString, nil
 		}
 	}
-	if err != nil && !socket.closed {
+	if err != nil && !socket.closed.Load() {
 		log("LocalAgent receive error: " + err.Error())
 	}
 	return "", err

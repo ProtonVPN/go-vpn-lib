@@ -273,7 +273,14 @@ func (conn *AgentConnection) setState(state string) {
 
 func (conn *AgentConnection) SetConnectivity(available bool) {
 	go func() {
+		// Double-check closed state in goroutine
+		if conn.closed.Load() {
+			return
+		}
+
 		conn.connectivity = available
+		conn.client.Log(fmt.Sprintf("LocalAgent: connectivity changed to %v", available))
+
 		select {
 		case conn.updateConnectivity <- available:
 		case <-conn.closeChannel:
