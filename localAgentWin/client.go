@@ -3,9 +3,10 @@ package main
 import (
 	"C"
 	"encoding/json"
-	"go-vpn-lib/localAgent"
-	"go-vpn-lib/vpnPing"
 	"strings"
+
+	"github.com/ProtonVPN/go-vpn-lib/localAgent"
+	"github.com/ProtonVPN/go-vpn-lib/vpnPing"
 )
 
 var currentConnection *localAgent.AgentConnection
