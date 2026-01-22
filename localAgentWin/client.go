@@ -4,6 +4,7 @@ import (
 	"C"
 	"encoding/json"
 	"strings"
+	"sync"
 
 	"github.com/ProtonVPN/go-vpn-lib/localAgent"
 	"github.com/ProtonVPN/go-vpn-lib/vpnPing"
@@ -15,6 +16,8 @@ var currentClient *WindowsClient
 type WindowsClient struct {
 	localAgent.NativeClient
 	eventChannel chan *Event
+	mutex        sync.Mutex
+	isClosed     bool
 }
 
 type ConnectionDetailsType struct {
@@ -36,15 +39,15 @@ type Event struct {
 }
 
 func (c *WindowsClient) Log(log string) {
-	c.eventChannel <- &Event{EventType: "log", Log: log}
+	c.sendEvent(&Event{EventType: "log", Log: log})
 }
 
 func (c *WindowsClient) OnState(s string) {
-	c.eventChannel <- &Event{EventType: "state", State: s}
+	c.sendEvent(&Event{EventType: "state", State: s})
 }
 
 func (c *WindowsClient) OnError(code int, desc string) {
-	c.eventChannel <- &Event{EventType: "error", Code: code, Desc: desc}
+	c.sendEvent(&Event{EventType: "error", Code: code, Desc: desc})
 }
 
 func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
@@ -58,18 +61,18 @@ func (c *WindowsClient) OnStatusUpdate(status *localAgent.StatusMessage) {
 		}
 	}
 
-	c.eventChannel <- &Event{EventType: "status", ConnectionDetails: connectionDetails}
+	c.sendEvent(&Event{EventType: "status", ConnectionDetails: connectionDetails})
 
 	var featuresStatistics []byte
 	if status.FeaturesStatistics != nil {
 		featuresStatistics, _ = status.FeaturesStatistics.MarshalJSON()
 	}
 	if featuresStatistics != nil {
-		c.eventChannel <- &Event{EventType: "stats", FeaturesStatistics: string(featuresStatistics)}
+		c.sendEvent(&Event{EventType: "stats", FeaturesStatistics: string(featuresStatistics)})
 	}
 
 	if status.Restrictions != nil {
-		c.eventChannel <- &Event{EventType: "restrictions", Restrictions: status.Restrictions}
+		c.sendEvent(&Event{EventType: "restrictions", Restrictions: status.Restrictions})
 	}
 }
 
@@ -158,10 +161,20 @@ func SetConnectivity(connectivity bool) {
 
 //export Close
 func Close() {
-	currentConnection.Close()
-	currentConnection = nil
-	close(currentClient.eventChannel)
-	currentClient = nil
+	if currentClient != nil {
+		currentClient.mutex.Lock()
+		if !currentClient.isClosed {
+			currentClient.isClosed = true
+			close(currentClient.eventChannel)
+		}
+		currentClient.mutex.Unlock()
+		currentClient = nil
+	}
+
+	if currentConnection != nil {
+		currentConnection.Close()
+		currentConnection = nil
+	}
 }
 
 //export Ping
@@ -173,6 +186,18 @@ func deepCopy(s string) string {
 	var sb strings.Builder
 	sb.WriteString(s)
 	return sb.String()
+}
+
+func (c *WindowsClient) sendEvent(event *Event) {
+	if c == nil {
+		return
+	}
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if c.isClosed {
+		return
+	}
+	c.eventChannel <- event
 }
 
 func main() {}
