@@ -74,6 +74,7 @@ type Consts struct {
 	StatsMalwareKey        string
 	StatsAdsKey            string
 	StatsTrackerKey        string
+	StatsAdultContentKey   string
 	StatsSavedBytesKey     string
 
 	// NOTE: initialize in var consts when adding new
@@ -119,6 +120,7 @@ var consts = &Consts{
 	StatsMalwareKey:        "DNSBL/1b",
 	StatsAdsKey:            "DNSBL/2a",
 	StatsTrackerKey:        "DNSBL/2b",
+	StatsAdultContentKey:   "DNSBL/3a",
 	StatsSavedBytesKey:     "savedBytes",
 }
 

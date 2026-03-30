@@ -25,6 +25,7 @@ import "sync"
 var avgAdSizeBytes int64 = 200 * 1024
 var avgTrackerSizeBytes int64 = 50 * 1024
 var avgMalwareSizeBytes int64 = 750 * 1024
+var avgAdultContentSizeBytes int64 = 1454 * 1024
 
 type ErrorMessage struct {
 	Code        int    `json:"code"`
@@ -210,10 +211,12 @@ func (status *StatusMessage) processStats() {
 			var malwareBlocked = netshieldStats.GetIntOrDefault(consts.StatsMalwareKey, 0)
 			var adsBlocked = netshieldStats.GetIntOrDefault(consts.StatsAdsKey, 0)
 			var trackersBlocked = netshieldStats.GetIntOrDefault(consts.StatsTrackerKey, 0)
+			var adultContentsBlocked = netshieldStats.GetIntOrDefault(consts.StatsAdultContentKey, 0)
 			var statsSavedBytes =
 				avgAdSizeBytes * adsBlocked +
 				avgTrackerSizeBytes * trackersBlocked +
-				avgMalwareSizeBytes * malwareBlocked
+				avgMalwareSizeBytes * malwareBlocked +
+				avgAdultContentSizeBytes * adultContentsBlocked
 			netshieldStats.SetInt(consts.StatsSavedBytesKey, statsSavedBytes)
 		}
 	}
