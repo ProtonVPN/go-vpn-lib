@@ -55,7 +55,7 @@ afterEvaluate {
     }
 
     mavenPublishing {
-        publishToMavenCentral(false)
+        publishToMavenCentral(automaticRelease = true)
         signAllPublications()
     }
 }
